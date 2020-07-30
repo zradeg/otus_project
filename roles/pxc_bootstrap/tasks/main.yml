@@ -1,0 +1,15 @@
+---
+- name: Enable safe_to_bootstrap on pxc1
+  lineinfile:
+    dest: /var/lib/mysql/grastate.dat
+    regexp: 'safe_to_bootstrap: 0'
+    line: 'safe_to_bootstrap: 1'
+  tags:
+    - disable_bootstrap
+
+- name: Start mysql.service on pxc1 as Bootstrap.service
+  systemd:
+    name: mysql@bootstrap.service
+    state: started
+  tags:
+    - bootstrap_first_node

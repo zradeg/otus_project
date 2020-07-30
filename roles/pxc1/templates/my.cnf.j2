@@ -1,0 +1,39 @@
+# Template my.cnf for PXC
+# Edit to your requirements.
+!includedir /etc/my.cnf.d/
+!includedir /etc/percona-xtradb-cluster.conf.d/
+
+[client]
+socket=/var/lib/mysql/mysql.sock
+
+[mysqld]
+server-id=1
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+log-error=/var/log/mysqld.log
+log_timestamps = SYSTEM
+pid-file=/var/run/mysqld/mysqld.pid
+# Binary log expiration period is 604800 seconds, which equals 7 days
+expire_logs_days=7
+innodb_strict_mode=OFF
+
+
+binlog_format                  = ROW
+innodb_buffer_pool_size        = 100M
+innodb_flush_log_at_trx_commit = 0
+innodb_flush_method            = O_DIRECT
+innodb_log_files_in_group      = 2
+innodb_log_file_size           = 20M
+innodb_file_per_table          = 1
+datadir                        = /var/lib/mysql
+
+wsrep_cluster_address          = gcomm://pxc2,pxc3
+wsrep_provider                 = /usr/lib64/galera3/libgalera_smm.so
+
+wsrep_slave_threads            = 8
+wsrep_cluster_name             = pxc-cluster
+wsrep_node_name                = percona1
+
+wsrep_node_address             = pxc1
+wsrep_sst_method               = xtrabackup-v2
+wsrep_sst_auth                 = sstuser:{{ mysql_password_sst }}

@@ -1,0 +1,147 @@
+---
+- name: Install elrepo-release
+  yum:
+    name: elrepo-release
+    state: present
+
+- name: Install packages
+  yum:
+    name:
+      - wget
+      - nginx
+      - php
+      - php-fpm
+      - php-mysql
+      - php-mbstring
+      - php-imap
+      - dovecot
+      - dovecot-mysql
+
+- name: Add group for vmail user
+  group:
+    name: vmail
+    gid: '1100'
+    state: present
+
+- name: Add user for mail
+  user:
+    name: vmail
+    uid: '1100'
+    group: '1100'
+
+- name: Configure postfix main
+  copy:
+    src: "{{ item }}"
+    dest: /etc/postfix/
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - main.cf
+    - master.cf
+
+- name: Configure postfix BD
+  template:
+    src: "{{ item }}.j2"
+    dest: "/var/spool/postfix/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - mysql_virtual_alias_maps.cf
+    - mysql_virtual_domains_maps.cf
+    - mysql_virtual_mailbox_maps.cf
+
+- name: Postfix restart
+  systemd:
+    name: postfix
+    state: restarted
+    enabled: yes
+
+- name: copy nginx.conf
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+  tags: nginx
+
+- name: copy nginx default.conf
+  copy:
+    src: default.conf
+    dest: /etc/nginx/conf.d/default.conf
+  tags: nginx
+
+- name: copy php-fpm config
+  copy:
+    src: www.conf
+    dest: /etc/php-fpm.d/www.conf
+  tags: nginx
+
+- name: Get postfixadmin
+  shell: wget https://sourceforge.net/projects/postfixadmin/files/latest/download -O /usr/src/postfixadmin.tar.gz
+
+- name: Create directory for postfixadmin
+  file:
+    path: /usr/share/nginx/html/postfixadmin
+    state: directory
+    mode: 0755
+
+- name: Create another one directory
+  file:
+    path: /usr/share/nginx/html/postfixadmin/templates_c
+    state: directory
+    mode: 0755
+
+- name: Install postfixadmin app
+  shell: tar -C /usr/share/nginx/html/postfixadmin -xvf /usr/src/postfixadmin.tar.gz --strip-components 1
+
+- name: Configure postfixadmin
+  copy:
+    src: config.local.php
+    dest: /usr/share/nginx/html/postfixadmin/
+
+- name: Chown /usr/share/nginx/html
+  file:
+    path: /usr/share/nginx/html
+    owner: nginx
+    group: nginx
+    recurse: yes
+  tags: nginx
+
+- name: Start php-fpm
+  systemd:
+    name: php-fpm
+    state: started
+    enabled: yes
+  tags: nginx-start-phpfpm
+
+- name: Start nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+  tags: nginx-start-nginx
+
+- name: Configure dovecot
+  copy:
+    src: auth-sql.conf.ext
+    dest: /etc/dovecot/conf.d/
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Still configure dovecot
+  copy:
+    src: "{{ item }}"
+    dest: /etc/dovecot/
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - dovecot-sql.conf.ext
+    - dovecot.conf
+
+- name: Start dovecote
+  systemd:
+    name: dovecot
+    state: started
+    enabled: yes

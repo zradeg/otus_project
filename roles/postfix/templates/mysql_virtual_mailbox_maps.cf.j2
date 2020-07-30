@@ -1,0 +1,5 @@
+user = postfix
+password = postfix
+hosts = {{ proxysql01_name }}
+dbname = postfix
+query = SELECT domain FROM domain WHERE domain='%u'

@@ -1,0 +1,117 @@
+---
+#- hosts: all
+#  become: yes
+#  roles:
+#    - base_options
+#
+#- hosts: ngx01
+#  become: yes
+#  roles:
+#    - ngx
+#
+#- hosts: ngx02
+#  become: yes
+#  roles:
+#    - ngx
+
+####----------Postfix DRBD Setup---------
+#- name: drbd cluster setup
+#  hosts:
+#    - postfix01
+#    - postfix02
+#    - postfix03
+#  become: yes
+#  roles:
+#    - pf_drdb_cluster_setup
+####----------End of Postfix DRBD Setup---------
+#
+#####----------Postfix service Setup---------
+#- name: postfix setup
+#  hosts:
+#    - postfix01
+#    - postfix02
+#    - postfix03
+#  become: yes
+#  roles:
+#    - postfix
+#####----------End of Postfix service Setup---------
+
+##----------Postfix pcm Setup---------
+- name: postfix pcm setup
+  hosts:
+    - postfix01
+    - postfix02
+    - postfix03
+  become: yes
+  roles:
+    - pf_pcm_setup
+##----------End of Postfix pcm Setup---------
+
+####----------Percona XtraDB Cluster Setup---------
+#- name: Percona Install
+#  hosts:
+#    - pxc1
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_install_percona
+#
+#- name: Сonfig access PerconaDB
+#  hosts:
+#    - pxc1
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_config_access
+#
+#- name: Config node1
+#  hosts:
+#    - pxc1
+#  become: yes
+#  roles:
+#    - pxc_config_node1
+#
+#- name: Config node2-3
+#  hosts:
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_config_node2-3
+#
+#- name: Boostrap cluster
+#  hosts:
+#    - pxc1
+#  become: yes
+#  roles:
+#    - pxc_bootstrap
+#
+#- name: Add joiners to cluster
+#  hosts:
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_add_joiners
+#
+#- name: Complete master init
+#  hosts:
+#    - pxc1
+#  become: yes
+#  roles:
+#    - pxc_master_completion
+####-------End of Percona XtraDB Cluster Setup------
+#
+####------------ProxySQL setup-----------
+#- hosts: proxysql01
+#  become: yes
+#  roles:
+#    - proxysql01
+####---------end of ProxySQL setup-------
+#
+#- hosts: backup
+#  become: yes
+#  roles:
+#    - backup

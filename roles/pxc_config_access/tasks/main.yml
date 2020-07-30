@@ -1,0 +1,158 @@
+---
+- name: Check that the .my.cnf exists
+  stat:
+    path: /root/.my.cnf
+  register: mycnf_present
+  tags:
+    - ch_pwd_mysql
+
+- name: get mysql superuser setup password
+  shell: "awk '/temporary pass/ {print $11}' /var/log/mysqld.log"
+  register: mysql_root_pwd
+  when: not mycnf_present.stat.exists
+  tags:
+    - mysql
+    - ch_pwd_mysql
+
+#- debug: msg='{{ mysql_root_pwd.stdout }}'
+#  tags:
+#    - mysql
+
+- name:  Change mysql root password if .my.cnf does not exists
+  shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ mysql_root_password }}'');" --connect-expired-password -uroot -p"{{ mysql_root_pwd.stdout }}"'
+  when: not mycnf_present.stat.exists
+  tags:
+    - ch_pwd_mysql
+
+- name: Create .my.cnf
+  template:
+    src: roles/pxc/templates/client.my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0600
+#  notify: restart mysql
+  when: not mycnf_present.stat.exists
+  tags:
+    - ch_pwd_mysql
+
+- name: Mysql restart
+  systemd:
+    name: mysql
+    state: restarted
+  when: not mycnf_present.stat.exists
+  tags:
+    - ch_pwd_mysql
+
+- name: Remove all anonymous users
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+  tags:
+    - prepare_for_cluster
+
+- name: Remove the test database
+  mysql_db:
+    login_user: root
+    login_password: otus
+    name: test
+    state: absent
+  tags:
+    - prepare_for_cluster
+
+- name: Create root for proxysql
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mysql_root_password }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    priv: "*.*:ALL,GRANT"
+    state: present
+  with_items:
+    - "{{ proxysql01_name }}"
+  tags:
+    - prepare_for_cluster1
+
+- name: Create sstuser
+  mysql_user:
+    name: sstuser
+    host: "{{ item }}"
+    password: "{{ mysql_password_sst }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    priv: "*.*:ALL,GRANT"
+    state: present
+  with_items:
+    - "{{ ansible_host }}"
+    - localhost
+  tags:
+    - prepare_for_cluster
+
+- name: Create monitor-user for proxysql
+  mysql_user:
+    name: monitor
+    host: "{{ item }}"
+    password: "monitor"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    priv: "*.*:ALL,GRANT"
+    state: present
+  with_items:
+    - "{{ proxysql01_name }}"
+  tags:
+    - prepare_for_cluster1
+
+- name: Create database for roundcube
+  mysql_db:
+    name: roundcube
+    encoding: utf8
+    collation: utf8_general_ci
+    state: present
+
+- name: Create database for postfix
+  mysql_db:
+    name: postfix
+    encoding: utf8
+    collation: utf8_general_ci
+    state: present
+
+- name: Create user for roundcube
+  mysql_user:
+    name: roundcube
+    host: "{{ item }}"
+    password: "roundcube"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    priv: "roundcube.*:ALL,GRANT"
+    state: present
+  with_items:
+    - "{{ ngx01_name }}"
+    - "{{ ngx02_name }}"
+    - "{{ proxysql01_name }}"
+  tags:
+    - prepare_for_cluster1
+
+- name: Create user for postfix
+  mysql_user:
+    name: postfix
+    host: "{{ item }}"
+    password: "postfix"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    priv: "postfix.*:ALL,GRANT"
+    state: present
+  with_items:
+    - "postfix%"
+    - "{{ proxysql01_name }}"
+  tags:
+    - prepare_for_cluster1
+
+- name: Stop mysql.service on all pxcs
+  systemd:
+    name: mysql.service
+    state: stopped
+  tags:
+    - stop_mysql
+    - prepare_for_cluster

@@ -1,0 +1,5 @@
+user = postfix
+password = postfix
+hosts = {{ proxysql01_name }}
+dbname = postfix
+query = SELECT CONCAT(domain,'/',maildir) FROM mailbox WHERE username='%s' AND active = '1'

@@ -1,0 +1,19 @@
+---
+#- name: stop mysql
+#  systemd:
+#    name: mysql
+#    state: stopped
+#    enabled: yes
+#
+#- name: start mysql
+#  systemd:
+#    name: mysql
+#    state: started
+#    enabled: yes
+#    masked: no
+#
+#- name: restart mysql
+#  systemd:
+#    name: mysql
+#    state: restarted
+#    enabled: yes

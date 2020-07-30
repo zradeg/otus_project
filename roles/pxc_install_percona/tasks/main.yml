@@ -1,0 +1,38 @@
+---
+- name: Remove conflicting packages
+  yum:
+    name:
+      - mariadb-libs
+      - mariadb
+      - MySQL-python
+    state: absent
+
+- name: install percona-release repository
+  yum:
+    name:
+      - 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm'
+      - epel-release
+    state: latest
+
+- name: Enable percona-release original release only repository
+  command: percona-release enable-only original release
+
+- name: install PXC packages and dependencies
+  yum:
+    name:
+      - Percona-XtraDB-Cluster-57
+      - Percona-XtraDB-Cluster-shared-57
+      - percona-toolkit
+      - python2-PyMySQL
+      - MySQL-python
+      - rsync
+      - nc
+    state: latest
+#  notify:
+#    - start mysql
+
+- name: Fix previous notify | START MYSQL
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes

@@ -1,0 +1,6 @@
+driver = mysql
+connect = host=proxysql01 port=6033 dbname=postfix user=postfix password=postfix
+default_pass_scheme = MD5-CRYPT
+password_query = SELECT password FROM mailbox WHERE username = '%u'
+user_query = SELECT maildir, 1024 AS uid, 1024 AS gid FROM mailbox WHERE username = '%u'
+user_query = SELECT CONCAT('/var/spool/postfix',LCASE(`domain`),'/',LCASE(`maildir`)), 1024 AS uid, 1024 AS gid FROM mailbox WHERE username = '%u'

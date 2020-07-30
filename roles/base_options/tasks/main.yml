@@ -1,0 +1,39 @@
+---
+- name: set timezone
+  file: src=/usr/share/zoneinfo/Europe/Moscow path=/etc/localtime force=yes
+
+- name: add names to hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: '{{ item }}'
+  with_items:
+    - '{{ ngx01_ip }} {{ ngx01_name }}'
+    - '{{ ngx02_ip }} {{ ngx02_name }}'
+    - '{{ postfix01_ip }} {{ postfix01_name }}'
+    - '{{ postfix02_ip }} {{ postfix02_name }}'
+    - '{{ postfix03_ip }} {{ postfix03_name }}'
+    - '{{ proxysql01_ip }} {{ proxysql01_name }}'
+    - '{{ pxc1_ip }} {{ pxc1_name }}'
+    - '{{ pxc2_ip }} {{ pxc2_name }}'
+    - '{{ pxc3_ip }} {{ pxc3_name }}'
+    - '{{ backup_ip }} {{ backup_name }}'
+
+- name: install general packages
+  yum:
+    name:
+      - epel-release
+      - vim
+      - tcpdump
+      - wget
+      - libsemanage-python
+      - libselinux-python
+    state: latest
+ 
+- name: Disable SELinux temporarly
+  selinux: state=disabled
+
+- name: Disable SELinux permanently
+  replace:
+    path: /etc/selinux/config
+    regexp: 'SELINUX=enforcing'
+    replace: 'SELINUX=disabled'

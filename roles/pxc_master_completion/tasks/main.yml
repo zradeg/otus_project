@@ -1,0 +1,15 @@
+---
+- name: Stop mysql.service on pxc1 as Bootstrap.service
+  systemd:
+    name: mysql@bootstrap.service
+    state: stopped
+  tags:
+    - return_of_the_master
+
+- name: Start first node normally
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes
+  tags:
+    - return_of_the_master

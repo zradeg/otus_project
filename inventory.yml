@@ -1,0 +1,67 @@
+---
+all:
+  hosts:
+    ngx01:
+      ansible_host:  192.168.11.111
+      ansible_ssh_private_key_file: .vagrant/machines/ngx01/virtualbox/private_key
+    ngx02:
+      ansible_host:  192.168.11.112
+      ansible_ssh_private_key_file: .vagrant/machines/ngx02/virtualbox/private_key
+    postfix01:
+      ansible_host:  192.168.11.113
+      ansible_ssh_private_key_file: .vagrant/machines/postfix01/virtualbox/private_key
+    postfix02:
+      ansible_host:  192.168.11.114
+      ansible_ssh_private_key_file: .vagrant/machines/postfix02/virtualbox/private_key
+    postfix03:
+      ansible_host:  192.168.11.115
+      ansible_ssh_private_key_file: .vagrant/machines/postfix03/virtualbox/private_key
+
+    proxysql01:
+      ansible_host: 192.168.11.116
+      ansible_ssh_private_key_file: .vagrant/machines/proxysql01/virtualbox/private_key
+
+#    backup:
+#      ansible_host:  "{{ backup  }}"
+#      ansible_ssh_private_key_file: .vagrant/machines/backup/virtualbox/private_key
+
+    pxc1:
+      ansible_host: 192.168.11.120
+      ansible_ssh_private_key_file: .vagrant/machines/pxc1/virtualbox/private_key
+    pxc2:
+      ansible_host: 192.168.11.121
+      ansible_ssh_private_key_file: .vagrant/machines/pxc2/virtualbox/private_key
+    pxc3:
+      ansible_host: 192.168.11.122
+      ansible_ssh_private_key_file: .vagrant/machines/pxc3/virtualbox/private_key
+
+
+  vars:
+    ngx_vip: 192.168.11.110
+    ngx01_ip: 192.168.11.111
+    ngx02_ip: 192.168.11.112
+    postfix01_ip: 192.168.11.113
+    postfix02_ip: 192.168.11.114
+    postfix03_ip: 192.168.11.115
+    proxysql01_ip: 192.168.11.116
+    pxc1_ip: 192.168.11.120
+    pxc2_ip: 192.168.11.121
+    pxc3_ip: 192.168.11.122
+    backup_ip: 192.168.11.123
+    ngx01_name: ngx01
+    ngx02_name: ngx02
+    postfix01_name: postfix01
+    postfix02_name: postfix02
+    postfix03_name: postfix03
+    proxysql01_name: proxysql01
+    pxc1_name: pxc1
+    pxc2_name: pxc2
+    pxc3_name: pxc3
+#    backup_name: backup
+    mysql_root_password: otus
+    mysql_password_sst: sstuserpass
+    roundcube_mysql_login: roundcube
+    roundcube_mysql_pass: roundcube
+    hcluster_password: otus
+    resource_drbd_name: postfix
+    postfix_drbd_mountpoint: /var/spool/postfix

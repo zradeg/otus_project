@@ -1,0 +1,44 @@
+---
+- name: Remove conflicting packages
+  yum:
+    name:
+      - mariadb-libs
+      - mariadb
+      - MySQL-python
+      - Percona-Server-shared-56
+    state: absent
+  tags: proxysql
+
+- name: install percona-release repository
+  yum:
+    name:
+      - 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm'
+      - epel-release
+    state: latest
+  tags: proxysql
+
+- name: Enable percona-release original release only repository
+  command: percona-release enable-only original release
+  tags: proxysql
+
+- name: Install proxysql2 and mysql-client
+  yum:
+    name:
+      - Percona-Server-client-57
+      - proxysql2
+    state: latest
+  tags: proxysql
+
+- name: Copy config proxysql.cnf
+  copy:
+    src: roles/{{ inventory_hostname }}/files/proxysql.cnf
+    dest: /etc/proxysql.cnf
+    owner: root
+    group: proxysql
+    mode: 0640
+
+- name: Start proxysql
+  systemd:
+    name: proxysql
+    state: started
+    enabled: yes

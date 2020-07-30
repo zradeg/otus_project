@@ -1,0 +1,10 @@
+---
+- name: Set PXC configuration for pxc1
+  template:
+    src: roles/{{ inventory_hostname }}/templates/my.cnf.j2
+    dest: /etc/my.cnf
+    mode: 0644
+    owner: root
+    group: root
+  tags:
+    - set_config_pxc1

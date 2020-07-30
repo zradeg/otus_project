@@ -1,0 +1,20 @@
+---
+- name: Disable safe_to_bootstrap on pxc2 and pxc3
+  lineinfile:
+    dest: /var/lib/mysql/grastate.dat
+    regexp: 'safe_to_bootstrap: 1'
+    line: 'safe_to_bootstrap: 0'
+  when: ('ansible_host' == 'pxc2_ip') or
+        ('ansible_host' == 'pxc3_ip')
+  tags:
+    - disable_bootstrap
+
+- name: Set PXC configuration for pxc2 and pxc3
+  template:
+    src: roles/{{ inventory_hostname }}/templates/my.cnf.j2
+    dest: /etc/my.cnf
+    mode: 0644
+    owner: root
+    group: root
+  tags:
+    - set_config_pxc2-3

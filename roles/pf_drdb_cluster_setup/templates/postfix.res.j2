@@ -1,0 +1,33 @@
+resource {{ resource_drbd_name }} {
+        
+        net {
+                      cram-hmac-alg sha1;
+                      shared-secret "FooFunFactory";
+            }
+        volume 0 {
+            device    /dev/drbd0;
+            disk      /dev/sdb;
+            meta-disk internal;
+                 }
+        on postfix01 {
+                node-id 0;
+                address {{ postfix01_ip }}:7788;
+        }
+        on postfix02  {
+                node-id 1;
+                address {{ postfix02_ip }}:7788;
+        }
+        on postfix03  {
+                node-id 2;
+                address {{ postfix03_ip }}:7788;
+        }
+        connection-mesh {
+
+          hosts  postfix01  postfix02 postfix03;
+          net {
+              protocol C;
+          }
+
+        }
+
+}

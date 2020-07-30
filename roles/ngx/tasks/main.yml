@@ -1,0 +1,104 @@
+---
+- name: install nginx and roundcube dependencies
+  yum:
+    name:
+      - keepalived
+      - nginx
+      - php
+      - php-fpm
+      - php-mysql
+      - php-pear
+      - php-mcrypt
+      - php-intl
+      - php-ldap
+      - php-pear-Net-SMTP
+      - php-pear-Net-IDNA2
+      - php-pear-Mail-Mime
+      - php-gd
+      - php-pecl-imagick
+      - python2-PyMySQL
+      - MySQL-python
+      - mysql
+    state: latest
+  tags: nginx
+
+- name: copy keepalived.conf
+  copy:
+    src: ../files/keepalived.conf
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags: nginx
+
+- name: copy nginx.conf
+  copy:
+    src: ../files/nginx.conf
+    dest: /etc/nginx/nginx.conf
+  tags: nginx
+
+- name: copy nginx default.conf
+  copy:
+    src: ../files/default.conf
+    dest: /etc/nginx/conf.d/default.conf
+  tags: nginx
+
+- name: copy php-fpm config
+  copy:
+    src: ../files/www.conf
+    dest: /etc/php-fpm.d/www.conf
+  tags: nginx
+
+- name: copy roundcube app directory
+  synchronize:
+    src: ../files/webmail
+    dest: /usr/share/nginx/html/
+    links: no
+  tags: nginx
+
+- name: Configure roundcube
+  template:
+    src: ../templates/config.inc.php.j2
+    dest: /usr/share/nginx/html/webmail/config/config.inc.php
+  tags: conf_roundcube
+
+- name: Chown /usr/share/nginx/html
+  file:
+    path: /usr/share/nginx/html
+    owner: nginx
+    group: nginx
+    recurse: yes
+  tags: nginx
+
+- name: Restore roundcube bd
+  mysql_db:
+    login_host: "{{ proxysql01_name }}"
+    login_port: 6033
+    login_user: "{{ roundcube_mysql_login }}"
+    login_password: "{{ roundcube_mysql_pass }}"
+    name: roundcube
+    state: import
+    target: /usr/share/nginx/html/webmail/SQL/mysql.initial.sql
+  ignore_errors: yes
+  tags: nginx-bd
+
+- name: Start keepalived
+  systemd:
+    name: keepalived
+    state: started
+    enabled: yes
+  tags: keepalive-start
+
+- name: Start php-fpm
+  systemd:
+    name: php-fpm
+    state: started
+    enabled: yes
+  tags: nginx-start-phpfpm
+
+- name: Start nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
+  tags: nginx-start-nginx

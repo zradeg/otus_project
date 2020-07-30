@@ -1,0 +1,7 @@
+---
+- name: Node is up?
+  stat:
+    path: /opt/drbd_node_done
+  register: drbd_node_done
+
+

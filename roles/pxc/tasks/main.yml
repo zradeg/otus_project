@@ -1,0 +1,221 @@
+---
+- name: Remove conflicting packages
+  yum:
+    name:
+      - mariadb-libs
+      - mariadb
+      - MySQL-python
+    state: absent
+
+- name: install percona-release repository
+  yum:
+    name:
+      - 'https://repo.percona.com/yum/percona-release-latest.noarch.rpm'
+      - epel-release
+    state: latest
+
+- name: Enable percona-release original release only repository
+  command: percona-release enable-only original release
+
+- name: install PXC packages and dependencies
+  yum:
+    name:
+      - Percona-XtraDB-Cluster-57
+      - Percona-XtraDB-Cluster-shared-57
+      - percona-toolkit
+      - python2-PyMySQL
+      - MySQL-python
+      - rsync
+      - nc
+    state: latest
+#  notify:
+#    - start mysql
+
+- name: Fix previous notify | START MYSQL
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Check that the .my.cnf exists
+  stat:
+    path: /root/.my.cnf
+  register: mycnf_present
+  tags:
+    - ch_pwd_mysql
+
+- name: get mysql superuser setup password
+  shell: "awk '/temporary pass/ {print $11}' /var/log/mysqld.log"
+  register: mysql_root_pwd
+  when: not mycnf_present.stat.exists
+  tags:
+    - mysql
+    - ch_pwd_mysql
+
+
+#- debug: msg='{{ mysql_root_pwd.stdout }}'
+#  tags:
+#    - mysql
+
+- name:  Change mysql root password if .my.cnf does not exists
+  shell: 'mysql -e "SET PASSWORD = PASSWORD(''{{ mysql_root_password }}'');" --connect-expired-password -uroot -p"{{ mysql_root_pwd.stdout }}"'
+  when: not mycnf_present.stat.exists
+  tags:
+    - ch_pwd_mysql
+
+- name: Create .my.cnf
+  template:
+    src: roles/pxc/templates/client.my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 0600
+#  notify: restart mysql
+  when: not mycnf_present.stat.exists
+  tags:
+    - ch_pwd_mysql
+
+- name: Mysql restart
+  systemd:
+    name: mysql
+    state: restarted
+  when: not mycnf_present.stat.exists
+  tags:
+    - ch_pwd_mysql
+
+- name: Remove all anonymous users
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+  tags:
+    - prepare_for_cluster
+
+- name: Remove the test database
+  mysql_db:
+    login_user: root
+    login_password: otus
+    name: test
+    state: absent
+  tags:
+    - prepare_for_cluster
+
+- name: Create sstuser
+  mysql_user:
+    name: sstuser
+    host: "{{ item }}"
+    password: "{{ mysql_password_sst }}"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    priv: "*.*:ALL,GRANT"
+    state: present
+  with_items:
+    - "{{ ansible_host }}"
+    - localhost
+  tags:
+    - prepare_for_cluster
+
+- name: Stop mysql.service on all pxcs
+  systemd:
+    name: mysql.service
+    state: stopped
+  tags:
+    - stop_mysql
+    - prepare_for_cluster
+
+- name: Set PXC configuration for pxc1
+  template:
+    src: roles/{{ inventory_hostname }}/templates/my.cnf.j2
+    dest: /etc/my.cnf
+    mode: 0644
+    owner: root
+    group: root
+  when: "'ansible_host' == 'pxc1_ip'"
+  tags:
+    - set_config_pxc1
+
+- name: Disable safe_to_bootstrap on pxc2 and pxc3
+  lineinfile:
+    dest: /var/lib/mysql/grastate.dat
+    regexp: 'safe_to_bootstrap: 1'
+    line: 'safe_to_bootstrap: 0'
+  when: ('ansible_host' == 'pxc2_ip') or
+        ('ansible_host' == 'pxc3_ip')
+  tags:
+    - disable_bootstrap
+
+- name: Set PXC configuration for pxc2 and pxc3
+  template:
+    src: roles/{{ inventory_hostname }}/templates/my.cnf.j2
+    dest: /etc/my.cnf
+    mode: 0644
+    owner: root
+    group: root
+  when: ('ansible_host' == 'pxc2_ip') or
+        ('ansible_host' == 'pxc3_ip')
+  tags:
+    - set_config_pxc2-3
+#-----------------------------------------------------------
+#- name: Start mysql.service on pxc1 as Bootstrap.service
+#  systemd:
+#    name: mysql@bootstrap.service
+#    state: started
+#  when: "'ansible_host' == 'pxc1_ip'"
+#  tags:
+#    - bootstrap_first_node
+#
+#- name: Delete directory /var/lib/mysql
+#  file:
+#    state: absent
+#    path: /var/lib/mysql/
+#  when: ('ansible_host' == 'pxc2_ip') or
+#        ('ansible_host' == 'pxc3_ip')
+#  tags:
+#    - empty_var_dir
+#
+#- name: Create empty /var/lib/mysql
+#  file:
+#    state: directory
+#    path: /var/lib/mysql
+#    owner: mysql
+#    group: mysql
+#    mode: 0751
+#  when: ('ansible_host' == 'pxc2_ip') or
+#        ('ansible_host' == 'pxc3_ip')
+#  tags:
+#    - empty_var_dir
+#
+#- name: Start mysql.service on pxc2
+#  systemd:
+#    name: mysql
+#    state: started
+#    enabled: yes
+#  when: "'ansible_host' == 'pxc2_ip'"
+#  tags:
+#    - add_secondary_nodes
+#
+#- name: Start mysql.service on pxc3
+#  systemd:
+#    name: mysql
+#    state: started
+#    enabled: yes
+#  when: "'ansible_host' == 'pxc3_ip'"
+#  tags:
+#    - add_secondary_nodes
+#
+#- name: Stop mysql.service on pxc1 as Bootstrap.service
+#  systemd:
+#    name: mysql@bootstrap.service
+#    state: stopped
+#  when: "'ansible_host' == 'pxc1_ip'"
+#  tags:
+#    - stop_bootstrap
+#
+#- name: Start first node normally
+#  systemd:
+#    name: mysql
+#    state: started
+#    enabled: yes
+#  when: "'ansible_host' == 'pxc1_ip'"
+#  tags:
+#    - stop_bootstrap

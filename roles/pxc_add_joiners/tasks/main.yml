@@ -1,0 +1,25 @@
+---
+- name: Delete directory /var/lib/mysql
+  file:
+    state: absent
+    path: /var/lib/mysql/
+  tags:
+    - empty_var_dir
+
+- name: Create empty /var/lib/mysql
+  file:
+    state: directory
+    path: /var/lib/mysql
+    owner: mysql
+    group: mysql
+    mode: 0751
+  tags:
+    - empty_var_dir
+
+- name: Start mysql.service on pxc2 ans pxc3
+  systemd:
+    name: mysql
+    state: started
+    enabled: yes
+  tags:
+    - add_secondary_nodes

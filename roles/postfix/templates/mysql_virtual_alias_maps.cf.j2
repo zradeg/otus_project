@@ -1,0 +1,5 @@
+user = postfix
+password = postfix
+hosts = {{ proxysql01_name }}
+dbname = postfix
+query = SELECT goto FROM alias WHERE address='%s' AND active = '1'
