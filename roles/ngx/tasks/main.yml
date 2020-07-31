@@ -24,7 +24,7 @@
 
 - name: copy keepalived.conf
   copy:
-    src: ../files/keepalived.conf
+    src: roles/{{ inventory_hostname }}/files/keepalived.conf
     dest: /etc/keepalived/keepalived.conf
     owner: root
     group: root

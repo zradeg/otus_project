@@ -99,6 +99,14 @@
     src: config.local.php
     dest: /usr/share/nginx/html/postfixadmin/
 
+- name: Chown /var/lib/php/session
+  file:
+    path: /var/lib/php/session
+    owner: nginx
+    group: nginx
+    recurse: yes
+  tags: nginx
+
 - name: Chown /usr/share/nginx/html
   file:
     path: /usr/share/nginx/html
@@ -121,6 +129,15 @@
     enabled: yes
   tags: nginx-start-nginx
 
+- name: Make dir for certs
+  file:
+    path: /etc/postfix/certs/
+    state: directory
+    mode: 0755
+
+- name: Generate certs
+  shell: openssl req -new -x509 -days 3650 -nodes -out /etc/postfix/certs/cert.pem -keyout /etc/postfix/certs/key.pem -subj "/C=RU/ST=Msc/L=Msc/O=Global Security/OU=IT Department/CN=relay.postfix.loc"
+
 - name: Configure dovecot
   copy:
     src: auth-sql.conf.ext
@@ -140,7 +157,13 @@
     - dovecot-sql.conf.ext
     - dovecot.conf
 
-- name: Start dovecote
+- name: Make dir for dovecot logs
+  file:
+    path: /var/log/dovecot
+    state: directory
+    mode: 0755
+
+- name: Start dovecot
   systemd:
     name: dovecot
     state: started
