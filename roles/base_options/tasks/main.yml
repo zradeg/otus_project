@@ -7,8 +7,10 @@
     dest: /etc/hosts
     line: '{{ item }}'
   with_items:
+    - '{{ ngx_vip }} {{ ngx_name }}'
     - '{{ ngx01_ip }} {{ ngx01_name }}'
     - '{{ ngx02_ip }} {{ ngx02_name }}'
+    - '{{ postfix_mail_ip }} {{ postfix_mail_name }}'
     - '{{ postfix01_ip }} {{ postfix01_name }}'
     - '{{ postfix02_ip }} {{ postfix02_name }}'
     - '{{ postfix03_ip }} {{ postfix03_name }}'

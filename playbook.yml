@@ -1,8 +1,8 @@
 ---
-- hosts: all
-  become: yes
-  roles:
-    - base_options
+#- hosts: all
+#  become: yes
+#  roles:
+#    - base_options
 
 #- hosts: ngx01
 #  become: yes
@@ -14,16 +14,16 @@
 #  roles:
 #    - ngx
 
-###----------Postfix DRBD Setup---------
-- name: drbd cluster setup
-  hosts:
-    - postfix01
-    - postfix02
-    - postfix03
-  become: yes
-  roles:
-    - pf_drdb_cluster_setup
-###----------End of Postfix DRBD Setup---------
+####----------Postfix DRBD Setup---------
+#- name: drbd cluster setup
+#  hosts:
+#    - postfix01
+##    - postfix02
+##    - postfix03
+#  become: yes
+#  roles:
+#    - pf_drdb_cluster_setup
+####----------End of Postfix DRBD Setup---------
 
 ####----------Postfix service Setup---------
 - name: postfix setup

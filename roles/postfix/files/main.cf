@@ -1,24 +1,32 @@
+soft_bounce = no
 queue_directory = /var/spool/postfix
 command_directory = /usr/sbin
 daemon_directory = /usr/libexec/postfix
 data_directory = /var/lib/postfix
 mail_owner = postfix
-myhostname = postfix
+
+myhostname = mail.postfix.loc
+mydomain = postfix.loc
 myorigin = $myhostname
+
 inet_interfaces = all
-inet_protocols = all
-mydestination = $myhostname, localhost.$mydomain, localhost, localhost.localdomain
-local_recipient_maps = unix:passwd.byname $alias_maps
+inet_protocols = ipv4
+
+mydestination = localhost.$mydomain, localhost
 unknown_local_recipient_reject_code = 550
-mynetworks_style = subnet
+mynetworks = 127.0.0.0/8, 192.168.11.0/24
+
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 
+smtpd_banner = $myhostname ESMTP $mail_name
 
 debug_peer_level = 2
+# Строки с PATH и ddd должны быть с отступом в виде табуляции от начала строки
 debugger_command =
-         PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
-         ddd $daemon_directory/$process_name $process_id & sleep 5
+    PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+    ddd $daemon_directory/$process_name $process_id & sleep 5
+
 sendmail_path = /usr/sbin/sendmail.postfix
 newaliases_path = /usr/bin/newaliases.postfix
 mailq_path = /usr/bin/mailq.postfix
@@ -27,23 +35,93 @@ html_directory = no
 manpage_directory = /usr/share/man
 sample_directory = /usr/share/doc/postfix-2.10.1/samples
 readme_directory = /usr/share/doc/postfix-2.10.1/README_FILES
-virtual_mailbox_base = /var/spool/postfix/mail
-virtual_alias_maps = proxy:mysql:/var/spool/postfix/mysql_virtual_alias_maps.cf
-virtual_mailbox_domains = proxy:mysql:/var/spool/postfix/mysql_virtual_domains_maps.cf
-virtual_mailbox_maps = proxy:mysql:/var/spool/postfix/mysql_virtual_mailbox_maps.cf
-virtual_minimum_uid = 1100
-virtual_uid_maps = static:1100
-virtual_gid_maps = static:1100
+
+relay_domains = mysql:/etc/postfix/mysql/relay_domains.cf
+virtual_alias_maps = mysql:/etc/postfix/mysql/virtual_alias_maps.cf,
+ mysql:/etc/postfix/mysql/virtual_alias_domain_maps.cf
+virtual_mailbox_domains = mysql:/etc/postfix/mysql/virtual_mailbox_domains.cf
+virtual_mailbox_maps = mysql:/etc/postfix/mysql/virtual_mailbox_maps.cf
+
+smtpd_discard_ehlo_keywords = etrn, silent-discard
+smtpd_forbidden_commands = CONNECT GET POST
+broken_sasl_auth_clients = yes
+smtpd_delay_reject = yes
+smtpd_helo_required = yes
+smtp_always_send_ehlo = yes
+disable_vrfy_command = yes
+
+smtpd_helo_restrictions = permit_mynetworks,
+ permit_sasl_authenticated,
+ reject_non_fqdn_helo_hostname,
+ reject_invalid_helo_hostname
+
+smtpd_data_restrictions = permit_mynetworks,
+ permit_sasl_authenticated,
+ reject_unauth_pipelining,
+ reject_multi_recipient_bounce,
+
+smtpd_sender_restrictions = permit_mynetworks,
+ permit_sasl_authenticated,
+ reject_non_fqdn_sender,
+ reject_unknown_sender_domain
+
+smtpd_recipient_restrictions = permit_mynetworks,
+ permit_sasl_authenticated,
+ reject_non_fqdn_recipient,
+ reject_unknown_recipient_domain,
+ reject_multi_recipient_bounce,
+ reject_unauth_destination,
+
+smtp_tls_security_level = may
+smtp_tls_loglevel = 1
+smtpd_tls_security_level = may
+smtpd_tls_loglevel = 1
+smtpd_tls_received_header = yes
+smtpd_tls_session_cache_timeout = 3600s
+smtp_tls_session_cache_database = btree:$data_directory/smtp_tls_session_cache
+smtpd_tls_key_file = /etc/postfix/certs/key.pem
+smtpd_tls_cert_file = /etc/postfix/certs/cert.pem
+tls_random_source = dev:/dev/urandom
+smtpd_tls_mandatory_ciphers = low
+smtpd_tls_ciphers = low
+smtpd_tls_mandatory_protocols = !SSLv2,!SSLv3
+smtp_tls_mandatory_protocols  = !SSLv2,!SSLv3
+smtp_tls_ciphers = low
+smtp_tls_mandatory_ciphers = low
+smtp_tls_protocols = !SSLv2,!SSLv3
+smtp_tls_policy_maps = hash:/etc/postfix/tls_policy_maps
+# фиксировать в логе имена серверов, выдающих сообщение STARTTLS, поддержка TLS для которых не включена
+smtp_tls_note_starttls_offer = yes
+
+# Ограничение максимального размера письма в байтах
+message_size_limit = 20000000
+smtpd_soft_error_limit = 10
+smtpd_hard_error_limit = 15
+smtpd_error_sleep_time = 20
+anvil_rate_time_unit = 60s
+smtpd_client_connection_count_limit = 20
+smtpd_client_connection_rate_limit = 30
+smtpd_client_message_rate_limit = 30
+smtpd_client_event_limit_exceptions = 127.0.0.0/8
+smtpd_client_connection_limit_exceptions = 127.0.0.0/8
+
+maximal_queue_lifetime = 1d
+bounce_queue_lifetime = 1d
+
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_type = dovecot
+smtpd_sasl_path = private/dovecot-auth
+
+# Директория для хранения почты
+virtual_mailbox_base = /mnt/mail
+virtual_minimum_uid = 1000
+virtual_uid_maps = static:1000
+virtual_gid_maps = static:1000
 virtual_transport = dovecot
 dovecot_destination_recipient_limit = 1
-smtpd_sasl_auth_enable = yes
-smtpd_sasl_exceptions_networks = $mynetworks
-smtpd_sasl_security_options = noanonymous
-broken_sasl_auth_clients = yes
-smtpd_sasl_type = dovecot
-smtpd_sasl_path = private/auth
-smtpd_tls_cert_file = /etc/ssl/mail/public.pem
-smtpd_tls_key_file = /etc/ssl/mail/private.key
-smtpd_use_tls = yes
-smtpd_tls_auth_only = yes
-smtpd_helo_required = yes
+
+sender_bcc_maps = hash:/etc/postfix/sender_bcc_maps
+recipient_bcc_maps = hash:/etc/postfix/recipient_bcc_maps
+
+compatibility_level=2

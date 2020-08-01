@@ -196,12 +196,12 @@ pcs cluster start --all
 
 
 #Создаем виртуальны ip
-pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip=192.168.11.100 cidr_netmask=24 op monitor interval=1s
+pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip=192.168.11.100 cidr_netmask=24 op monitor interval=10s
 
+pcs resource create cluster_ip ocf:heartbeat:IPaddr2 ip=192.168.11.100 cidr_netmask=24 op monitor interval=30s
 
+pcs resource delete virtual_ip
 
-Автоматизировать генерацию сертификатов
-openssl req -new -x509 -days 1461 -nodes -out /etc/ssl/mail/public.pem -keyout /etc/ssl/mail/private.key -subj "/C=RU/ST=Msc/L=Msc/O=Global Security/OU=IT Department/CN=relay.postfix.loc"
 
 
 

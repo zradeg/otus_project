@@ -16,6 +16,7 @@
       - php-imap
       - dovecot
       - dovecot-mysql
+      - dovecot-pigeonhole
 
 - name: Add group for vmail user
   group:
@@ -28,35 +29,6 @@
     name: vmail
     uid: '1100'
     group: '1100'
-
-- name: Configure postfix main
-  copy:
-    src: "{{ item }}"
-    dest: /etc/postfix/
-    owner: root
-    group: root
-    mode: 0644
-  with_items:
-    - main.cf
-    - master.cf
-
-- name: Configure postfix BD
-  template:
-    src: "{{ item }}.j2"
-    dest: "/var/spool/postfix/{{ item }}"
-    owner: root
-    group: root
-    mode: 0644
-  with_items:
-    - mysql_virtual_alias_maps.cf
-    - mysql_virtual_domains_maps.cf
-    - mysql_virtual_mailbox_maps.cf
-
-- name: Postfix restart
-  systemd:
-    name: postfix
-    state: restarted
-    enabled: yes
 
 - name: copy nginx.conf
   copy:
@@ -129,6 +101,43 @@
     enabled: yes
   tags: nginx-start-nginx
 
+- name: Configure postfix general
+  copy:
+    src: "{{ item }}"
+    dest: /etc/postfix/
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - main.cf
+    - master.cf
+    - tls_policy_maps
+    - recipient_bcc_maps
+    - sender_bcc_maps
+
+- name: Make dir for postfix-mysql
+  file:
+    path: /etc/postfix/mysql
+    state: directory
+    mode: 0755
+
+- name: Configure postfix bd credentials
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/postfix/mysql/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - relay_domains.cf
+    - virtual_alias_domain_maps.cf
+    - virtual_alias_maps.cf
+    - virtual_mailbox_domains.cf
+    - virtual_mailbox_maps.cf
+
+- name: Make indexed base from senders&recipients
+  shell: /sbin/postmap /etc/postfix/recipient_bcc_maps /etc/postfix/sender_bcc_maps
+
 - name: Make dir for certs
   file:
     path: /etc/postfix/certs/
@@ -138,15 +147,7 @@
 - name: Generate certs
   shell: openssl req -new -x509 -days 3650 -nodes -out /etc/postfix/certs/cert.pem -keyout /etc/postfix/certs/key.pem -subj "/C=RU/ST=Msc/L=Msc/O=Global Security/OU=IT Department/CN=relay.postfix.loc"
 
-- name: Configure dovecot bd credentials
-  copy:
-    src: auth-sql.conf.ext
-    dest: /etc/dovecot/conf.d/
-    owner: root
-    group: root
-    mode: 0644
-
-- name: Still configure dovecot main configs
+- name: Configure dovecot main configs
   copy:
     src: "{{ item }}"
     dest: /etc/dovecot/
@@ -154,17 +155,25 @@
     group: root
     mode: 0644
   with_items:
-    - dovecot-sql.conf.ext
+    - dovecot-mysql.conf
     - dovecot.conf
 
 - name: Make dir for dovecot logs
   file:
     path: /var/log/dovecot
     state: directory
+    owner: vmail
+    group: dovecot
     mode: 0755
 
 - name: Start dovecot
   systemd:
     name: dovecot
     state: started
+    enabled: yes
+
+- name: Restart postfix
+  systemd:
+    name: postfix
+    state: restarted
     enabled: yes

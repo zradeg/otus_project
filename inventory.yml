@@ -40,6 +40,7 @@ all:
     ngx_vip: 192.168.11.110
     ngx01_ip: 192.168.11.111
     ngx02_ip: 192.168.11.112
+    postfix_mail_ip: 192.168.11.100
     postfix01_ip: 192.168.11.113
     postfix02_ip: 192.168.11.114
     postfix03_ip: 192.168.11.115
@@ -48,8 +49,10 @@ all:
     pxc2_ip: 192.168.11.121
     pxc3_ip: 192.168.11.122
     backup_ip: 192.168.11.123
+    ngx_name: ngx
     ngx01_name: ngx01
     ngx02_name: ngx02
+    postfix_mail_name: mail.postfix.loc
     postfix01_name: postfix01
     postfix02_name: postfix02
     postfix03_name: postfix03
@@ -58,6 +61,11 @@ all:
     pxc2_name: pxc2
     pxc3_name: pxc3
     backup_name: backup
+    postfix_db_host: proxysql01
+    postfix_db_port: 6033
+    postfix_db_user: postfix
+    postfix_db_pass: postfix
+    postfix_db_name: postfix
     mysql_root_password: otus
     mysql_password_sst: sstuserpass
     roundcube_mysql_login: roundcube
