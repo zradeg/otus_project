@@ -138,7 +138,7 @@
 - name: Generate certs
   shell: openssl req -new -x509 -days 3650 -nodes -out /etc/postfix/certs/cert.pem -keyout /etc/postfix/certs/key.pem -subj "/C=RU/ST=Msc/L=Msc/O=Global Security/OU=IT Department/CN=relay.postfix.loc"
 
-- name: Configure dovecot
+- name: Configure dovecot bd credentials
   copy:
     src: auth-sql.conf.ext
     dest: /etc/dovecot/conf.d/
@@ -146,7 +146,7 @@
     group: root
     mode: 0644
 
-- name: Still configure dovecot
+- name: Still configure dovecot main configs
   copy:
     src: "{{ item }}"
     dest: /etc/dovecot/

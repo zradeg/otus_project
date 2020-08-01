@@ -64,4 +64,4 @@ all:
     roundcube_mysql_pass: roundcube
     hcluster_password: otus
     resource_drbd_name: postfix
-    postfix_drbd_mountpoint: /var/mail
+    postfix_drbd_mountpoint: /mnt/mail
