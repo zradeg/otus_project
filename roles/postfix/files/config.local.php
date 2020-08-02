@@ -1,7 +1,7 @@
 <?php
 
 $CONF['configured'] = true;
-$CONF['setup_password'] = 'bff0983368335032599fddsfhgjtretuiu8776yhj657de020a90ba837';
+$CONF['setup_password'] = 'f4292ee7054b0f5481f6e08ed9ad0bd3:5fd98c73375833a5841caf0c95636f5a424426d5';
 $CONF['default_language'] = 'ru';
 $CONF['database_type'] = 'mysqli';
 $CONF['database_host'] = 'proxysql01';

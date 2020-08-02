@@ -30,6 +30,13 @@
     uid: '1100'
     group: '1100'
 
+- name: Set owner to mail dir
+  file:
+    path: "{{ postfix_drbd_mountpoint }}"
+    owner: vmail
+    group: vmail
+  ignore_errors: yes
+
 - name: copy nginx.conf
   copy:
     src: nginx.conf
@@ -121,7 +128,7 @@
     state: directory
     mode: 0755
 
-- name: Configure postfix bd credentials
+- name: Configure postfix bd queues
   template:
     src: "{{ item }}.j2"
     dest: "/etc/postfix/mysql/{{ item }}"

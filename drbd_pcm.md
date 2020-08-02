@@ -221,11 +221,12 @@ pcs resource delete virtual_ip
 
 
 
+Разрешение сплит-брейна
 
-
-
-
-
+systemctl stop pacemaker
+drbdadm invalidate <нода, данные с которой будут удалены>
+systemctl start pacemaker
+crm resource cleanup <имя ресурса>
 
 
 

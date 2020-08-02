@@ -1,0 +1,33 @@
+resource {{ resource_drbd_name }} {
+        
+        net {
+                      cram-hmac-alg sha1;
+                      shared-secret "FooFunFactory";
+            }
+        volume 0 {
+            device    /dev/drbd0;
+            disk      /dev/sdb;
+            meta-disk internal;
+                 }
+        on pcm1 {
+                node-id 0;
+                address {{ pcm1_ip }}:7788;
+        }
+        on pcm2  {
+                node-id 1;
+                address {{ pcm2_ip }}:7788;
+        }
+        on pcm3  {
+                node-id 2;
+                address {{ pcm3_ip }}:7788;
+        }
+        connection-mesh {
+
+          hosts  pcm1  pcm2 pcm3;
+          net {
+              protocol C;
+          }
+
+        }
+
+}

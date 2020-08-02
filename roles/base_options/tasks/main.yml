@@ -18,6 +18,10 @@
     - '{{ pxc1_ip }} {{ pxc1_name }}'
     - '{{ pxc2_ip }} {{ pxc2_name }}'
     - '{{ pxc3_ip }} {{ pxc3_name }}'
+    - '{{ pcm1_ip }} {{ pcm1_name }}'
+    - '{{ pcm2_ip }} {{ pcm2_name }}'
+    - '{{ pcm3_ip }} {{ pcm3_name }}'
+
     - '{{ backup_ip }} {{ backup_name }}'
 
 - name: install general packages

@@ -40,13 +40,15 @@ $config['create_default_folders'] = true;
 // to display a pulldown menu or set one host as string.
 // Enter hostname with prefix ssl:// to use Implicit TLS, or use
 // prefix tls:// to use STARTTLS.
+$config['imap_auth_type'] = 'LOGIN';
+
 // Supported replacement variables:
 // %n - hostname ($_SERVER['SERVER_NAME'])
 // %t - hostname without the first part
 // %d - domain (http hostname $_SERVER['HTTP_HOST'] without the first part)
 // %s - domain name after the '@' from e-mail address provided at login screen
 // For example %n = mail.domain.tld, %t = domain.tld
-$config['default_host'] = 'localhost';
+$config['default_host'] = '{{ postfix_mail_ip }}';
 
 // SMTP server host (for sending mails).
 // Enter hostname with prefix ssl:// to use Implicit TLS, or use
@@ -58,10 +60,10 @@ $config['default_host'] = 'localhost';
 // %d - domain (http hostname $_SERVER['HTTP_HOST'] without the first part)
 // %z - IMAP domain (IMAP hostname without the first part)
 // For example %n = mail.domain.tld, %t = domain.tld
-$config['smtp_server'] = 'localhost';
+$config['smtp_server'] = '{{ postfix_mail_ip }}';
 
 // SMTP port. Use 25 for cleartext, 465 for Implicit TLS, or 587 for STARTTLS (default)
-$config['smtp_port'] = 587;
+$config['smtp_port'] = 25;
 
 // SMTP username (if required) if you use %u as the username Roundcube
 // will use the current username for login
@@ -91,4 +93,4 @@ $config['plugins'] = array(
 );
 
 // skin name: folder from skins/
-$config['skin'] = 'elastic';
+$config['skin'] = 'larry';

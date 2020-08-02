@@ -23,18 +23,6 @@
     update_password: always
     create_home: yes
 
-#- name: Authorize
-#  shell: pcs cluster auth postfix01 postfix02 postfix03 -u hacluster
-#  when: ansible_host == postfix01_ip
-
-- name: Authentificate all nodes
-  shell: pcs cluster auth postfix01 postfix02 postfix03 -u hacluster -p "{{ hcluster_password }}" --force
-  when: ansible_host == postfix01_ip
-
-- name: Create cluster
-  shell: pcs cluster setup --force --name CLUSTER postfix01 postfix02 postfix03
-  when: ansible_host == postfix01_ip
-
 - name: Start services
   systemd:
     name: "{{ item }}"
@@ -42,47 +30,4 @@
     enabled: yes
   with_items:
     - pcsd
-    - corosync
-    - pacemaker
-
-- name: Add drbd resource
-  shell: pcs cluster cib drbd_cfg
-  when: ansible_host == postfix01_ip
-
-- name: Add drbd resource
-  shell: "{{ item }}"
-  with_items:
-    - pcs cluster cib drbd_cfg
-    - pcs -f drbd_cfg resource create DrbdData ocf:linbit:drbd drbd_resource=data op monitor interval=60s
-    - pcs -f drbd_cfg resource master DrbdDataClone DrbdData master-max=1 master-node-max=1 clone-max=3 clone-node-max=1 notify=true
-    - pcs cluster cib-push drbd_cfg
-  when: ansible_host == postfix01_ip
-
-- name: Add drbdfs resource
-  shell: "{{ item }}"
-  with_items:
-    - pcs cluster cib fs_cfg
-    - pcs  -f fs_cfg resource create DrbdFS Filesystem device="/dev/drbd0" directory="/var/spool/postfix" fstype="xfs"
-    - pcs  -f fs_cfg constraint colocation add DrbdFS with DrbdDataClone INFINITY with-rsc-role=Master
-    - pcs  -f fs_cfg constraint order promote DrbdDataClone then start DrbdFS
-    - pcs cluster cib-push fs_cfg
-  when: ansible_host == postfix01_ip
-
-- name: Add virtual ip
-  shell: pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip=192.168.11.100 cidr_netmask=24 op monitor interval=2s
-  when: ansible_host == postfix01_ip
-
-- name: Add postfix resource
-  shell: pcs resource create postfix ocf:heartbeat:postfix op monitor interval=2s timeout=3s
-  when: ansible_host == postfix01_ip
-
-- name: Enable and start cluster
-  shell: "{{ item }}"
-  with_items:
-    pcs cluster enable --all
-    pcs cluster start --all
-  ignore_errors: true
-  when: ansible_host == postfix01_ip
-
-
-
+############-----cut here-----############

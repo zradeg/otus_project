@@ -1,6 +1,7 @@
-/project.iml
-/.idea/
-/terraform/.terraform/
-/terraform/.idea/
+project.iml
+.idea/
+terraform/.terraform/
+terraform/.idea/
 .vagrant
 VirtualBox VMs
+VBoxGuestAdditions.iso

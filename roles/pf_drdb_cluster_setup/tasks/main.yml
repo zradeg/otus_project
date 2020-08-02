@@ -24,42 +24,6 @@
     state: stopped
     enabled: no
 
-- name: Configure drbd
-  template:
-    src: "../templates/{{ item }}.j2"
-    dest: "/etc/drbd.d/{{ item }}"
-    owner: root
-    group: root
-    mode: 0744
-  with_items:
-    - global_common.conf
-    - postfix.res
-
-- name: Node is up?
-  stat:
-    path: /opt/drbd_node_done
-  register: drbd_node_done
-
-- name: Array init
-  shell: "{{ item }}"
-  when: drbd_node_done.stat.exists == False
-  with_items:
-    - "drbdadm create-md {{ resource_drbd_name }} --force"
-    - "drbdadm up {{ resource_drbd_name }}"
-
-- name: Set postfix01 as the primary
-  shell: "drbdadm primary --force {{ resource_drbd_name }}"
-  when: (drbd_node_done.stat.exists == False) and
-        (ansible_host == postfix01_ip)
-
-- name: Create fs
-  filesystem:
-    fstype: xfs
-    dev: /dev/drbd0
-  ignore_errors: true
-  when: ansible_host == postfix01_ip
-  tags: create_fs
-
 - name: Create mountpoint
   file:
     path: "{{ postfix_drbd_mountpoint }}"
@@ -69,11 +33,27 @@
     state: directory
   tags: mount_drbd
 
-- name: Mount drbd
-  mount:
-    path: "{{ postfix_drbd_mountpoint }}"
-    src: /dev/drbd0
-    fstype: xfs
-    state: mounted
-  when: ansible_host == postfix01_ip
-  tags: mount_drbd
+- name: Configure drbd
+  template:
+    src: "../templates/{{ item }}.j2"
+    dest: "/etc/drbd.d/{{ item }}"
+    owner: root
+    group: root
+    mode: 0744
+  with_items:
+    - global_common.conf
+    - pf_drbd.res
+
+- name: Node is up?
+  stat:
+    path: /opt/drbd_node_done
+  register: drbd_node_done
+
+- name: Array init
+  shell: "{{ item }}"
+  when: (drbd_node_done.stat.exists == False)
+  with_items:
+    - "drbdadm create-md {{ resource_drbd_name }} --force"
+    - "drbdadm up {{ resource_drbd_name }}"
+
+########---------cut here---------########

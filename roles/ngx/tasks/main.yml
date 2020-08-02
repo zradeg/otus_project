@@ -14,6 +14,7 @@
       - php-pear-Net-SMTP
       - php-pear-Net-IDNA2
       - php-pear-Mail-Mime
+      - php-pear-Net-Sieve
       - php-gd
       - php-pecl-imagick
       - python2-PyMySQL

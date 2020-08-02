@@ -1,0 +1,25 @@
+---
+########---------cut here---------########
+- name: Node is up?
+  stat:
+    path: /opt/drbd_node_done
+  register: drbd_node_done
+
+- name: Set postfix01 as the primary
+  shell: "drbdadm primary --force {{ resource_drbd_name }}"
+  when: (drbd_node_done.stat.exists == False)
+
+- name: Create fs
+  filesystem:
+    fstype: xfs
+    dev: /dev/drbd0
+  ignore_errors: true
+  tags: create_fs
+
+- name: Mount drbd
+  mount:
+    path: "{{ postfix_drbd_mountpoint }}"
+    src: /dev/drbd0
+    fstype: xfs
+    state: mounted
+  tags: mount_drbd
