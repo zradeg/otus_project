@@ -1,17 +1,26 @@
 ---
 - name: Install elrepo-release
   yum:
-    name: elrepo-release
+    name: "https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm"
     state: present
+
+- name: upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+
+- name: reboot
+  reboot:
 
 - name: Install packages
   yum:
     name:
       - kmod-drbd90
       - drbd90-utils
+      - policycoreutils-python
 
-- name: Reboot for avoid drbd-error
-  reboot:
+#- name: Reboot for avoid drbd-error
+#  reboot:
 
 - name: Add the drbd module
   modprobe:

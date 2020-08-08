@@ -15,11 +15,11 @@
     dev: /dev/drbd0
   ignore_errors: true
   tags: create_fs
-
-- name: Mount drbd
-  mount:
-    path: "{{ postfix_drbd_mountpoint }}"
-    src: /dev/drbd0
-    fstype: xfs
-    state: mounted
-  tags: mount_drbd
+#
+#- name: Mount drbd
+#  mount:
+#    path: "{{ postfix_drbd_mountpoint }}"
+#    src: /dev/drbd0
+#    fstype: xfs
+#    state: mounted
+#  tags: mount_drbd

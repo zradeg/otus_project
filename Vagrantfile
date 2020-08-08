@@ -3,6 +3,7 @@
 
 Vagrant.configure(2) do |config|
   config.vm.box = "centos/7"
+  config.vm.box_version = "1905.1"
 #  config.vbguest.iso_path = "VBoxGuestAdditions.iso"
   config.vbguest.auto_update = false
   config.vm.provider "virtualbox" do |v|

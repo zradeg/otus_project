@@ -34,6 +34,17 @@
     - pf_drdb_cluster_init
 ###----------End of Postfix DRBD Init---------
 
+##----------Postfix pcm Fence-agents Install---------
+- name: postfix pcm fence-agents install
+  hosts:
+    - postfix01
+    - postfix02
+    - postfix03
+  become: yes
+  roles:
+    - pf_fence_agents
+##----------End of Postfix pcm Fence-agents Install---------
+
 ####----------Postfix service Setup---------
 - name: postfix setup
   hosts:

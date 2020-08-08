@@ -8,9 +8,25 @@
   shell: "pcs cluster auth {{ pcm1_name }} {{ pcm2_name }} {{ pcm3_name }} -u hacluster -p {{ hcluster_password }} --force"
   when: ansible_host == postfix01_ip
 
+- name: Check for replay (/opt/pcs_config_done exists)
+  stat:
+    path: /opt/pcs_config_done
+  register: pcs_config_done
+
 - name: Create cluster
   shell: pcs cluster setup --force --name CLUSTER {{ pcm1_name }} {{ pcm2_name }} {{ pcm3_name }}
-  when: ansible_host == postfix01_ip
+  when: (ansible_host == postfix01_ip) and
+        (pcs_config_done.stat.exists != True)
+
+- name: Set replay protection (/opt/pcs_config_done)
+  file:
+    path: /opt/pcs_config_done
+    state: touch
+    owner: root
+    group: root
+    mode: '0744'
+  when:
+    - pcs_config_done.stat.exists != True
 
 - name: Start services
   systemd:
@@ -20,10 +36,6 @@
   with_items:
     - corosync
     - pacemaker
-
-- name: set stonith-disabled
-  shell: pcs property set stonith-enabled=false
-  when: ansible_host == postfix01_ip
 
 - name: Add drbd resource
   shell: pcs cluster cib drbd_cfg
@@ -47,6 +59,10 @@
     - pcs  -f fs_cfg constraint order promote DrbdDataClone then start DrbdFS
     - pcs cluster cib-push fs_cfg
   when: ansible_host == postfix01_ip
+#
+#- name: set stonith-disabled
+#  shell: pcs property set stonith-enabled=false
+#  when: ansible_host == postfix01_ip
 
 - name: Add virtual ip
   shell: pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip=192.168.11.100 cidr_netmask=24 op monitor interval=2s
@@ -80,5 +96,33 @@
   ignore_errors: true
   when: ansible_host == postfix01_ip
 
+- name: Wait a little
+  pause:
+    seconds: 10
 
+- name: Check for replay (/opt/pcs_fence_config_done exists)
+  stat:
+    path: /opt/pcs_fence_config_done
+  register: pcs_fence_config_done
 
+- name: Configure fencing on Virtualbox
+  shell: "{{ item }}"
+  with_items:
+    - "pcs stonith create pcm1_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"pcm1\" pcmk_host_list=\"pcm1\""
+    - "pcs stonith create pcm2_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"pcm2\" pcmk_host_list=\"pcm2\""
+    - "pcs stonith create pcm3_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"pcm3\" pcmk_host_list=\"pcm3\""
+    - "pcs constraint location pcm1_fence_dev avoids pcm1"
+    - "pcs constraint location pcm2_fence_dev avoids pcm2"
+    - "pcs constraint location pcm3_fence_dev avoids pcm3"
+  when: (ansible_virtualization_type == "virtualbox" and pcs_fence_config_done.stat.exists != True and ansible_host == postfix01_ip)
+#  no_log: true
+
+- name: Set replay protection (/opt/pcs_fence_config_done)
+  file:
+    path: /opt/pcs_fence_config_done
+    state: touch
+    owner: root
+    group: root
+    mode: '0744'
+  when:
+    - pcs_fence_config_done.stat.exists != True

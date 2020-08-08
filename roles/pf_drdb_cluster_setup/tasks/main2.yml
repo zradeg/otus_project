@@ -1,0 +1,60 @@
+---
+- name: Install ELrepo
+  yum:
+    name: "https://www.elrepo.org/elrepo-release-7.el7.elrepo.noarch.rpm"
+    state: present
+- name: upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+- name: reboot
+  reboot:
+- name: Install drbd
+  yum:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+    - kmod-drbd90
+    - drbd90-utils
+    - policycoreutils-python
+- name: Loading DRBD Kernel Module
+  modprobe:
+    name: drbd
+    state: present
+- name: Disable DRBD in systemd
+  systemd:
+    name: drbd.service
+    state: stopped
+    enabled: no
+- name: Set drbd_t to permissive
+  selinux_permissive:
+    name: drbd_t
+    permissive: true
+- name: Create mountpoint
+  file:
+    path: "{{ postfix_drbd_mountpoint }}"
+    owner: root
+    group: root
+    mode: '0757'
+    state: directory
+  tags: mount_drbd
+- name: Configure drbd
+  template:
+    src: "../templates/{{ item }}.j2"
+    dest: "/etc/drbd.d/{{ item }}"
+    owner: root
+    group: root
+    mode: 0744
+  with_items:
+    - pf_drbd.res
+- name: Node is up?
+  stat:
+    path: /opt/drbd_node_done
+  register: drbd_node_done
+- name: Array init
+  shell: "{{ item }}"
+  when: (drbd_node_done.stat.exists == False)
+  with_items:
+    - "drbdadm create-md {{ resource_drbd_name }} --force"
+    - "drbdadm up {{ resource_drbd_name }}"

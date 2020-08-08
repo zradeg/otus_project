@@ -1,6 +1,6 @@
-vagrant snapshot restore postfix01 PF01
-vagrant snapshot restore postfix02 PF02
-vagrant snapshot restore postfix03 PF03
+vagrant snapshot restore postfix01 PFR01
+vagrant snapshot restore postfix02 PFR02
+vagrant snapshot restore postfix03 PFR03
 
 #vagrant snapshot restore ngx01 NGX01
 #vagrant snapshot restore ngx02 NGX02

@@ -24,6 +24,19 @@
 
     - '{{ backup_ip }} {{ backup_name }}'
 
+- name: Allow ssh password login
+  replace:
+    path: /etc/ssh/sshd_config
+    regexp: 'PasswordAuthentication no'
+    replace: 'PasswordAuthentication yes'
+  tags: sshd_config
+
+- name: sshd restart
+  systemd:
+    name: sshd
+    state: restarted
+  tags: sshd_config
+
 - name: install general packages
   yum:
     name:

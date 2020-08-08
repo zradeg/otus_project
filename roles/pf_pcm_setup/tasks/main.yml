@@ -14,6 +14,7 @@
       - psmisc
       - policycoreutils-python
       - resource-agents
+  ignore_errors: yes
 
 - name: Set password for user hacluster
   user:
@@ -23,7 +24,7 @@
     update_password: always
     create_home: yes
 
-- name: Start services
+- name: Start pcsd service
   systemd:
     name: "{{ item }}"
     state: started
