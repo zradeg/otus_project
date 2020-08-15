@@ -1,9 +1,5 @@
 ---
 ############-----cut here-----############
-- name: Authorize
-  shell: "pcs cluster auth {{ pcm1_name }} {{ pcm2_name }} {{ pcm3_name }} -u hacluster -p otus"
-  when: ansible_host == postfix01_ip
-
 - name: Authentificate all nodes
   shell: "pcs cluster auth {{ pcm1_name }} {{ pcm2_name }} {{ pcm3_name }} -u hacluster -p {{ hcluster_password }} --force"
   when: ansible_host == postfix01_ip
@@ -36,12 +32,18 @@
   with_items:
     - corosync
     - pacemaker
+  no_log: true
 
-- name: Add drbd resource
-  shell: pcs cluster cib drbd_cfg
-  when: ansible_host == postfix01_ip
+#- name: Wait a little
+#  pause:
+#    seconds: 10
+#
 
-- name: Add drbd resource
+- name: Wait a little
+  pause:
+    seconds: 10
+
+- name: Add drbd resource DrbdData
   shell: "{{ item }}"
   with_items:
     - pcs cluster cib drbd_cfg
@@ -50,7 +52,11 @@
     - pcs cluster cib-push drbd_cfg
   when: ansible_host == postfix01_ip
 
-- name: Add drbdfs resource
+- name: Wait a little
+  pause:
+    seconds: 10
+
+- name: Add drbdfs resource DrbdFS
   shell: "{{ item }}"
   with_items:
     - pcs cluster cib fs_cfg
@@ -59,20 +65,36 @@
     - pcs  -f fs_cfg constraint order promote DrbdDataClone then start DrbdFS
     - pcs cluster cib-push fs_cfg
   when: ansible_host == postfix01_ip
-#
+
 #- name: set stonith-disabled
 #  shell: pcs property set stonith-enabled=false
 #  when: ansible_host == postfix01_ip
 
-- name: Add virtual ip
-  shell: pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip=192.168.11.100 cidr_netmask=24 op monitor interval=2s
+- name: Add virtual ip for postfix
+  shell: pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip={{ postfix_mail_ip }} cidr_netmask=24 op monitor interval=2s
+  when: ansible_host == postfix01_ip
+
+- name: Add virtual ip for proxysql
+  shell: pcs resource create proxysql_ip ocf:heartbeat:IPaddr2 ip={{ proxysql01_ip }} cidr_netmask=24 op monitor interval=2s
   when: ansible_host == postfix01_ip
 
 - name: Add postfix resource
   shell: pcs resource create postfix ocf:heartbeat:postfix op monitor interval=2s timeout=3s
   when: ansible_host == postfix01_ip
 
+- name: Add dovecot resource
+  shell: pcs resource create dovecot ocf:heartbeat:dovecot op monitor interval=2s timeout=3s
+  when: ansible_host == postfix01_ip
+
+#- name: Add proxysql resource
+#  shell: pcs resource create proxysql ocf:heartbeat:proxysql op monitor interval=2s timeout=3s
+#  when: ansible_host == postfix01_ip
+
 - name: constraint colocation add virtual_ip
+  command: pcs constraint colocation add virtual_ip with DrbdFS INFINITY
+  when: ansible_host == postfix01_ip
+
+- name: constraint colocation add proxysql_ip
   command: pcs constraint colocation add virtual_ip with DrbdFS INFINITY
   when: ansible_host == postfix01_ip
 
@@ -80,13 +102,33 @@
   command: pcs constraint colocation add postfix with virtual_ip INFINITY
   when: ansible_host == postfix01_ip
 
+- name: constraint colocation add dovecot
+  command: pcs constraint colocation add dovecot with virtual_ip INFINITY
+  when: ansible_host == postfix01_ip
+
+#- name: constraint colocation add proxysql
+#  command: pcs constraint colocation add proxysql with proxysql_ip INFINITY
+#  when: ansible_host == postfix01_ip
+
 - name: constraint order virtual_ip
   command: pcs constraint order DrbdFS then virtual_ip
+  when: ansible_host == postfix01_ip
+
+- name: constraint order proxysql_ip
+  command: pcs constraint order DrbdFS then proxysql_ip
   when: ansible_host == postfix01_ip
 
 - name: constraint order postfix
   command: pcs constraint order virtual_ip then postfix
   when: ansible_host == postfix01_ip
+
+- name: constraint order dovecot
+  command: pcs constraint order virtual_ip then dovecot
+  when: ansible_host == postfix01_ip
+
+#- name: constraint order proxysql
+#  command: pcs constraint order proxysql_ip then proxysql
+#  when: ansible_host == postfix01_ip
 
 - name: Enable and start cluster
   shell: "{{ item }}"
@@ -99,7 +141,7 @@
 - name: Wait a little
   pause:
     seconds: 10
-
+#
 - name: Check for replay (/opt/pcs_fence_config_done exists)
   stat:
     path: /opt/pcs_fence_config_done

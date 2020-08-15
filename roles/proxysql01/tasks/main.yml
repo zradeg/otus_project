@@ -8,6 +8,7 @@
       - Percona-Server-shared-56
     state: absent
   tags: proxysql
+  no_log: true
 
 - name: install percona-release repository
   yum:
@@ -16,6 +17,7 @@
       - epel-release
     state: latest
   tags: proxysql
+  no_log: true
 
 - name: Enable percona-release original release only repository
   command: percona-release enable-only original release
@@ -28,17 +30,20 @@
       - proxysql2
     state: latest
   tags: proxysql
+  no_log: true
 
 - name: Copy config proxysql.cnf
   copy:
-    src: roles/{{ inventory_hostname }}/files/proxysql.cnf
+    src: roles/proxysql01/files/proxysql.cnf
     dest: /etc/proxysql.cnf
     owner: root
     group: proxysql
     mode: 0640
+  tags: proxysql
 
 - name: Start proxysql
   systemd:
     name: proxysql
     state: started
     enabled: yes
+  tags: proxysql

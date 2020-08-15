@@ -36,8 +36,8 @@
 - name: Create mountpoint
   file:
     path: "{{ postfix_drbd_mountpoint }}"
-    owner: root
-    group: root
+    owner: vmail
+    group: vmail
     mode: '0757'
     state: directory
   tags: mount_drbd

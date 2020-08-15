@@ -72,6 +72,7 @@
     state: present
   with_items:
     - "{{ proxysql01_name }}"
+    - postfix%
   tags:
     - prepare_for_cluster1
 
@@ -100,9 +101,9 @@
     priv: "*.*:ALL,GRANT"
     state: present
   with_items:
-    - "{{ proxysql01_name }}"
+    - "%"
   tags:
-    - prepare_for_cluster1
+    - prepare_for_cluster1_
 
 - name: Create database for roundcube
   mysql_db:
@@ -131,8 +132,9 @@
     - "{{ ngx01_name }}"
     - "{{ ngx02_name }}"
     - "{{ proxysql01_name }}"
+    - "%"
   tags:
-    - prepare_for_cluster1
+    - prepare_for_cluster1__
 
 - name: Create user for postfix
   mysql_user:

@@ -17,9 +17,9 @@ all:
       ansible_host:  192.168.11.115
       ansible_ssh_private_key_file: .vagrant/machines/postfix03/virtualbox/private_key
 
-    proxysql01:
-      ansible_host: 192.168.11.116
-      ansible_ssh_private_key_file: .vagrant/machines/proxysql01/virtualbox/private_key
+#    proxysql01:
+#      ansible_host: 192.168.11.116
+#      ansible_ssh_private_key_file: .vagrant/machines/proxysql01/virtualbox/private_key
 
 #    backup:
 #      ansible_host:  "{{ backup  }}"

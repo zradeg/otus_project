@@ -4,8 +4,9 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "centos/7"
   config.vm.box_version = "1905.1"
-#  config.vbguest.iso_path = "VBoxGuestAdditions.iso"
+  config.vbguest.iso_path = "../VBoxGuestAdditions.iso"
   config.vbguest.auto_update = false
+  config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provider "virtualbox" do |v|
 	  v.memory = 512
   end
@@ -89,10 +90,10 @@ Vagrant.configure(2) do |config|
       end
   end
 
-  config.vm.define "proxysql01" do |proxysql01|
-    proxysql01.vm.network "private_network", ip: "192.168.11.116", virtualbox__intnet: false
-    proxysql01.vm.hostname = "proxysql01"
-  end
+#  config.vm.define "proxysql01" do |proxysql01|
+#    proxysql01.vm.network "private_network", ip: "192.168.11.116", virtualbox__intnet: false
+#    proxysql01.vm.hostname = "proxysql01"
+#  end
 
   config.vm.define "pxc1" do |pxc1|
     pxc1.vm.network "private_network", ip: "192.168.11.120", virtualbox__intnet: false

@@ -3,6 +3,7 @@
   yum:
     name: elrepo-release
     state: present
+  no_log: true
 
 - name: Install packages
   yum:
@@ -17,6 +18,14 @@
       - dovecot
       - dovecot-mysql
       - dovecot-pigeonhole
+    state: latest
+  no_log: true
+
+- name: Install postfix
+  yum:
+    name: postfix
+    state: latest
+  tags: qqq
 
 - name: Add group for vmail user
   group:
@@ -29,13 +38,6 @@
     name: vmail
     uid: '1100'
     group: '1100'
-
-- name: Set owner to mail dir
-  file:
-    path: "{{ postfix_drbd_mountpoint }}"
-    owner: vmail
-    group: vmail
-  ignore_errors: yes
 
 - name: copy nginx.conf
   copy:
@@ -57,6 +59,7 @@
 
 - name: Get postfixadmin
   shell: wget https://sourceforge.net/projects/postfixadmin/files/latest/download -O /usr/src/postfixadmin.tar.gz
+  no_log: true
 
 - name: Create directory for postfixadmin
   file:
@@ -72,6 +75,7 @@
 
 - name: Install postfixadmin app
   shell: tar -C /usr/share/nginx/html/postfixadmin -xvf /usr/src/postfixadmin.tar.gz --strip-components 1
+  no_log: true
 
 - name: Configure postfixadmin
   copy:
@@ -100,6 +104,7 @@
     state: started
     enabled: yes
   tags: nginx-start-phpfpm
+  no_log: true
 
 - name: Start nginx
   systemd:
@@ -107,6 +112,7 @@
     state: started
     enabled: yes
   tags: nginx-start-nginx
+  no_log: true
 
 - name: Configure postfix general
   copy:
@@ -128,7 +134,7 @@
     state: directory
     mode: 0755
 
-- name: Configure postfix bd queues
+- name: Configure postfix db queues
   template:
     src: "{{ item }}.j2"
     dest: "/etc/postfix/mysql/{{ item }}"
@@ -178,9 +184,10 @@
     name: dovecot
     state: started
     enabled: yes
+  no_log: true
 
-- name: Restart postfix
+- name: Stop postfix
   systemd:
     name: postfix
-    state: restarted
+    state: stopped
     enabled: yes

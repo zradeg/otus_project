@@ -271,3 +271,11 @@ pcs resource move virtual_ip postfix03
 [root@postfix01 ~]# pcs cluster standby pcm1
 Error: Unable to update cib
 Call cib_apply_diff failed (-62): Timer expired
+
+
+
+
+
+
+pcs resource debug-start proxysql_ip
+pcs resource refresh proxysql_ip
