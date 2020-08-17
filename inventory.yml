@@ -80,6 +80,6 @@ all:
     resource_drbd_name: pf_drbd
     postfix_drbd_mountpoint: /mnt/mail
     virtualbox_host: "192.168.11.1"
-    virtualbox_host_username: "mbfx"
-    virtualbox_host_password: 'password'
+    virtualbox_host_username: "vagrant"
+    virtualbox_host_password: 'vagrant'
 ...

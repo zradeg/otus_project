@@ -51,6 +51,7 @@
     state: absent
   tags:
     - prepare_for_cluster
+  no_log: true
 
 - name: Remove the test database
   mysql_db:
@@ -134,7 +135,7 @@
     - "{{ proxysql01_name }}"
     - "%"
   tags:
-    - prepare_for_cluster1__
+    - prepare_for_cluster1
 
 - name: Create user for postfix
   mysql_user:
@@ -150,6 +151,12 @@
     - "{{ proxysql01_name }}"
   tags:
     - prepare_for_cluster1
+
+- name: Set pxc_strict_mode variable to PERMISSIVE
+  mysql_variables:
+    variable: pxc_strict_mode
+    value: PERMISSIVE
+  tags: pxc_strict_mode
 
 - name: Stop mysql.service on all pxcs
   systemd:
