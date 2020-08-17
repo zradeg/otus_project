@@ -4,11 +4,11 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "centos/7"
   config.vm.box_version = "1905.1"
-  config.vbguest.iso_path = "../VBoxGuestAdditions.iso"
-  config.vbguest.auto_update = false
+#  config.vbguest.iso_path = "../VBoxGuestAdditions.iso"
+#  config.vbguest.auto_update = false
   config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.provider "virtualbox" do |v|
-	  v.memory = 512
+	  v.memory = 768
   end
 
   config.vm.define "ngx01" do |ngx01|
@@ -27,6 +27,7 @@ Vagrant.configure(2) do |config|
     postfix01.vm.network "private_network", ip: "192.168.11.113", virtualbox__intnet: false
     postfix01.vm.hostname = "postfix01"
     postfix01.vm.provider :virtualbox do |virtualbox|
+      virtualbox.name = "postfix01"
       need_controller_pf01 = false
       unless File.exist?(first_disk)
         virtualbox.customize ['createhd', '--filename', first_disk, '--variant', 'Fixed', '--size', 4096]
@@ -39,7 +40,7 @@ Vagrant.configure(2) do |config|
       if need_controller_pf01 == true
         virtualbox.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
       end
-      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', first_disk]
+      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 0, '--device', 0, '--type', 'hdd', '--medium', first_disk]
 #      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', second_disk]
       end
   end
@@ -50,6 +51,7 @@ Vagrant.configure(2) do |config|
     postfix02.vm.network "private_network", ip: "192.168.11.114", virtualbox__intnet: false
     postfix02.vm.hostname = "postfix02"
     postfix02.vm.provider :virtualbox do |virtualbox|
+      virtualbox.name = "postfix02"
       need_controller_pf02 = false
       unless File.exist?(first_disk)
         virtualbox.customize ['createhd', '--filename', first_disk, '--variant', 'Fixed', '--size', 4096]
@@ -62,7 +64,7 @@ Vagrant.configure(2) do |config|
       if need_controller_pf02 == true
         virtualbox.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
       end
-      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', first_disk]
+      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 0, '--device', 0, '--type', 'hdd', '--medium', first_disk]
 #      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', second_disk]
       end
   end
@@ -73,6 +75,7 @@ Vagrant.configure(2) do |config|
     postfix03.vm.network "private_network", ip: "192.168.11.115", virtualbox__intnet: false
     postfix03.vm.hostname = "postfix03"
     postfix03.vm.provider :virtualbox do |virtualbox|
+      virtualbox.name = "postfix03"
       need_controller_pf03 = false
       unless File.exist?(first_disk)
         virtualbox.customize ['createhd', '--filename', first_disk, '--variant', 'Fixed', '--size', 4096]
@@ -85,7 +88,7 @@ Vagrant.configure(2) do |config|
       if need_controller_pf03 == true
         virtualbox.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
       end
-      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', first_disk]
+      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 0, '--device', 0, '--type', 'hdd', '--medium', first_disk]
 #      virtualbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', second_disk]
       end
   end

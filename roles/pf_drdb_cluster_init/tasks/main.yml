@@ -2,12 +2,23 @@
 ########---------cut here---------########
 - name: Node is up?
   stat:
-    path: /opt/drbd_node_done
-  register: drbd_node_done
+    path: /opt/drbd_node_done2
+  register: drbd_node_done2
 
 - name: Set postfix01 as the primary
   shell: "drbdadm primary --force {{ resource_drbd_name }}"
-  when: (drbd_node_done.stat.exists == False)
+  when: (drbd_node_done2.stat.exists == False)
+  run_once: True
+
+- name: Set replay protection (/opt/drbd_node_done2)
+  file:
+    path: /opt/drbd_node_done2
+    state: touch
+    owner: root
+    group: root
+    mode: '0744'
+  when:
+    - drbd_node_done2.stat.exists != True
 
 - name: Create fs
   filesystem:
@@ -15,6 +26,8 @@
     dev: /dev/drbd0
   ignore_errors: true
   tags: create_fs
+  run_once: True
+
 #
 #- name: Mount drbd
 #  mount:
