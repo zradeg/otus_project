@@ -179,10 +179,10 @@
     group: dovecot
     mode: 0755
 
-- name: Start dovecot
+- name: Stop dovecot
   systemd:
     name: dovecot
-    state: started
+    state: stopped
     enabled: yes
   no_log: true
 

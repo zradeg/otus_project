@@ -103,7 +103,7 @@
 - name: Create sstuser
   mysql_user:
     name: sstuser
-    host: "{{ item }}"
+    host: "%"
     password: "{{ mysql_password_sst }}"
     login_user: root
     login_password: "{{ mysql_root_password }}"

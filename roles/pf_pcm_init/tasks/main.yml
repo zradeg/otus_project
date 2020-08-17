@@ -4,15 +4,21 @@
   shell: "pcs cluster auth {{ pcm1_name }} {{ pcm2_name }} {{ pcm3_name }} -u hacluster -p {{ hcluster_password }} --force"
   when: ansible_host == postfix01_ip
 
-- name: Check for replay (/opt/pcs_config_done exists)
+- name: Check for replay 1 (/opt/pcs_config_done exists)
   stat:
     path: /opt/pcs_config_done
   register: pcs_config_done
+  when: ansible_host == postfix01_ip
 
 - name: Create cluster
-  shell: pcs cluster setup --force --name CLUSTER {{ pcm1_name }} {{ pcm2_name }} {{ pcm3_name }}
-  when: (ansible_host == postfix01_ip) and
-        (pcs_config_done.stat.exists != True)
+  shell: "{{ item }}"
+  with_items:
+   - "pcs cluster setup --force --name CLUSTER {{ pcm1_name }} {{ pcm2_name }} {{ pcm3_name }}"
+   - "pcs cluster enable --all"
+   - "pcs cluster start --all"
+  when:
+    - ansible_host == postfix01_ip
+    - pcs_config_done.stat.exists != true
 
 - name: Set replay protection (/opt/pcs_config_done)
   file:
@@ -22,8 +28,9 @@
     group: root
     mode: '0744'
   when:
+    - ansible_host == postfix01_ip
     - pcs_config_done.stat.exists != True
-
+  
 - name: Start services
   systemd:
     name: "{{ item }}"
@@ -32,116 +39,60 @@
   with_items:
     - corosync
     - pacemaker
-  no_log: true
-
-#- name: Wait a little
-#  pause:
-#    seconds: 10
-#
 
 - name: Wait a little
   pause:
     seconds: 10
+
+- name: Check for replay 2 (/opt/pcs_config2_done exists)
+  stat:
+    path: /opt/pcs_config2_done
+  register: pcs_config2_done
 
 - name: Add drbd resource DrbdData
   shell: "{{ item }}"
   with_items:
-    - pcs cluster cib drbd_cfg
-    - pcs -f drbd_cfg resource create DrbdData ocf:linbit:drbd drbd_resource={{ resource_drbd_name }} op monitor interval=2s
-    - pcs -f drbd_cfg resource master DrbdDataClone DrbdData master-max=1 master-node-max=1 clone-max=3 clone-node-max=1 notify=true
-    - pcs cluster cib-push drbd_cfg
-  when: ansible_host == postfix01_ip
+    - "pcs cluster cib cfg"
+    - "pcs -f cfg resource create DrbdData ocf:linbit:drbd drbd_resource={{ resource_drbd_name }} op monitor interval=5s"
+    - "pcs -f cfg resource master DrbdDataClone DrbdData master-max=1 master-node-max=1 clone-max=3 clone-node-max=1 notify=true"
+    - "pcs -f cfg resource create DrbdFS Filesystem device=\"/dev/drbd0\" directory={{ postfix_drbd_mountpoint }} fstype=\"xfs\""
+    - "pcs -f cfg constraint colocation add DrbdFS with DrbdDataClone INFINITY with-rsc-role=Master"
+    - "pcs -f cfg constraint order promote DrbdDataClone then start DrbdFS"
+    - "pcs -f cfg resource create virtual_ip ocf:heartbeat:IPaddr2 ip={{ postfix_mail_ip }} cidr_netmask=24 op monitor interval=5s"
+    - "pcs -f cfg resource create proxysql_ip ocf:heartbeat:IPaddr2 ip={{ proxysql01_ip }} cidr_netmask=24 op monitor interval=5s"
+    - "pcs -f cfg resource create postfix ocf:heartbeat:postfix op monitor interval=5s timeout=15s"
+    - "pcs -f cfg resource create dovecot systemd:dovecot op monitor interval=5s timeout=15s"
+    - "pcs -f cfg resource create proxysql systemd:proxysql op monitor interval=5s timeout=15s"
+    - "pcs -f cfg constraint colocation add virtual_ip with DrbdFS INFINITY"
+    - "pcs -f cfg constraint colocation add proxysql_ip with DrbdFS INFINITY"
+    - "pcs -f cfg constraint colocation add postfix with virtual_ip INFINITY"
+    - "pcs -f cfg constraint colocation add dovecot with virtual_ip INFINITY"
+    - "pcs -f cfg constraint colocation add proxysql with proxysql_ip INFINITY"
+    - "pcs -f cfg constraint order DrbdFS then virtual_ip"
+    - "pcs -f cfg constraint order DrbdFS then proxysql_ip"
+    - "pcs -f cfg constraint order virtual_ip then postfix"
+    - "pcs -f cfg constraint order virtual_ip then dovecot"
+    - "pcs -f cfg constraint order proxysql_ip then proxysql"
+    - "pcs cluster cib-push cfg"
+  when:
+    - ansible_host == postfix01_ip
+    - pcs_config2_done.stat.exists != True
+
+- name: Set replay protection 2 (/opt/pcs_config2_done)
+  file:
+    path: /opt/pcs_config2_done
+    state: touch
+    owner: root
+    group: root
+    mode: '0744'
+  when:
+    - ansible_host == postfix01_ip
+    - pcs_config2_done.stat.exists != True
 
 - name: Wait a little
   pause:
     seconds: 10
 
-- name: Add drbdfs resource DrbdFS
-  shell: "{{ item }}"
-  with_items:
-    - pcs cluster cib fs_cfg
-    - pcs  -f fs_cfg resource create DrbdFS Filesystem device="/dev/drbd0" directory={{ postfix_drbd_mountpoint }} fstype="xfs"
-    - pcs  -f fs_cfg constraint colocation add DrbdFS with DrbdDataClone INFINITY with-rsc-role=Master
-    - pcs  -f fs_cfg constraint order promote DrbdDataClone then start DrbdFS
-    - pcs cluster cib-push fs_cfg
-  when: ansible_host == postfix01_ip
-
-#- name: set stonith-disabled
-#  shell: pcs property set stonith-enabled=false
-#  when: ansible_host == postfix01_ip
-
-- name: Add virtual ip for postfix
-  shell: pcs resource create virtual_ip ocf:heartbeat:IPaddr2 ip={{ postfix_mail_ip }} cidr_netmask=24 op monitor interval=2s
-  when: ansible_host == postfix01_ip
-
-- name: Add virtual ip for proxysql
-  shell: pcs resource create proxysql_ip ocf:heartbeat:IPaddr2 ip={{ proxysql01_ip }} cidr_netmask=24 op monitor interval=2s
-  when: ansible_host == postfix01_ip
-
-- name: Add postfix resource
-  shell: pcs resource create postfix ocf:heartbeat:postfix op monitor interval=2s timeout=3s
-  when: ansible_host == postfix01_ip
-
-- name: Add dovecot resource
-  shell: pcs resource create dovecot ocf:heartbeat:dovecot op monitor interval=2s timeout=3s
-  when: ansible_host == postfix01_ip
-
-#- name: Add proxysql resource
-#  shell: pcs resource create proxysql ocf:heartbeat:proxysql op monitor interval=2s timeout=3s
-#  when: ansible_host == postfix01_ip
-
-- name: constraint colocation add virtual_ip
-  command: pcs constraint colocation add virtual_ip with DrbdFS INFINITY
-  when: ansible_host == postfix01_ip
-
-- name: constraint colocation add proxysql_ip
-  command: pcs constraint colocation add virtual_ip with DrbdFS INFINITY
-  when: ansible_host == postfix01_ip
-
-- name: constraint colocation add postfix
-  command: pcs constraint colocation add postfix with virtual_ip INFINITY
-  when: ansible_host == postfix01_ip
-
-- name: constraint colocation add dovecot
-  command: pcs constraint colocation add dovecot with virtual_ip INFINITY
-  when: ansible_host == postfix01_ip
-
-#- name: constraint colocation add proxysql
-#  command: pcs constraint colocation add proxysql with proxysql_ip INFINITY
-#  when: ansible_host == postfix01_ip
-
-- name: constraint order virtual_ip
-  command: pcs constraint order DrbdFS then virtual_ip
-  when: ansible_host == postfix01_ip
-
-- name: constraint order proxysql_ip
-  command: pcs constraint order DrbdFS then proxysql_ip
-  when: ansible_host == postfix01_ip
-
-- name: constraint order postfix
-  command: pcs constraint order virtual_ip then postfix
-  when: ansible_host == postfix01_ip
-
-- name: constraint order dovecot
-  command: pcs constraint order virtual_ip then dovecot
-  when: ansible_host == postfix01_ip
-
-#- name: constraint order proxysql
-#  command: pcs constraint order proxysql_ip then proxysql
-#  when: ansible_host == postfix01_ip
-
-- name: Enable and start cluster
-  shell: "{{ item }}"
-  with_items:
-    pcs cluster enable --all
-    pcs cluster start --all
-  ignore_errors: true
-  when: ansible_host == postfix01_ip
-
-- name: Wait a little
-  pause:
-    seconds: 10
-#
 - name: Check for replay (/opt/pcs_fence_config_done exists)
   stat:
     path: /opt/pcs_fence_config_done
@@ -150,13 +101,13 @@
 - name: Configure fencing on Virtualbox
   shell: "{{ item }}"
   with_items:
-    - "pcs stonith create pcm1_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"pcm1\" pcmk_host_list=\"pcm1\""
-    - "pcs stonith create pcm2_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"pcm2\" pcmk_host_list=\"pcm2\""
-    - "pcs stonith create pcm3_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"pcm3\" pcmk_host_list=\"pcm3\""
+    - "pcs stonith create pcm1_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"postfix01\" pcmk_host_list=\"pcm1\""
+    - "pcs stonith create pcm2_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"postfix02\" pcmk_host_list=\"pcm2\""
+    - "pcs stonith create pcm3_fence_dev fence_vbox ipaddr=\"{{ virtualbox_host }}\" login=\"{{ virtualbox_host_username }}\" passwd=\"{{ virtualbox_host_password }}\" power_wait=\"10\" secure=\"1\" port=\"postfix03\" pcmk_host_list=\"pcm3\""
     - "pcs constraint location pcm1_fence_dev avoids pcm1"
     - "pcs constraint location pcm2_fence_dev avoids pcm2"
     - "pcs constraint location pcm3_fence_dev avoids pcm3"
-  when: (ansible_virtualization_type == "virtualbox" and pcs_fence_config_done.stat.exists != True and ansible_host == postfix01_ip)
+  when: (pcs_fence_config_done.stat.exists != True) and (ansible_host == postfix01_ip)
 #  no_log: true
 
 - name: Set replay protection (/opt/pcs_fence_config_done)
@@ -168,3 +119,4 @@
     mode: '0744'
   when:
     - pcs_fence_config_done.stat.exists != True
+    - ansible_host == postfix01_ip
