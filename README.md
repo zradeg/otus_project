@@ -35,7 +35,7 @@
 
 
 ### Схема стенда
-![schema](otus-project.svg)
+![schema](otus-project.png)
 
 
 ### Развертывание стенда
