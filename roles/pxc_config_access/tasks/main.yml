@@ -152,7 +152,7 @@
     - "%"
     - "localhost"
   tags:
-    - prepare_for_cluster1___
+    - prepare_for_cluster1
 
 - name: Set pxc_strict_mode variable to PERMISSIVE
   mysql_variables:
