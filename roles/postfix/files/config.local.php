@@ -13,6 +13,7 @@ $CONF['encrypt'] = 'md5crypt';
 $CONF['domain_path'] = 'YES';
 $CONF['domain_in_mailbox'] = 'YES';
 $CONF['transport_default'] = 'virtual';
+$CONF['emailcheck_resolve_domain']='NO';
 $CONF['default_aliases'] = array (
  'abuse' => 'root',
  'hostmaster' => 'root',

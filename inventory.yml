@@ -55,7 +55,7 @@ all:
     ngx_name: ngx
     ngx01_name: ngx01
     ngx02_name: ngx02
-    postfix_mail_name: mail.postfix.loc
+    postfix_mail_name: postfix.loc
     postfix01_name: postfix01
     postfix02_name: postfix02
     postfix03_name: postfix03

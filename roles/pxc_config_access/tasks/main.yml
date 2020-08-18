@@ -149,8 +149,10 @@
   with_items:
     - "postfix%"
     - "{{ proxysql01_name }}"
+    - "%"
+    - "localhost"
   tags:
-    - prepare_for_cluster1
+    - prepare_for_cluster1___
 
 - name: Set pxc_strict_mode variable to PERMISSIVE
   mysql_variables:

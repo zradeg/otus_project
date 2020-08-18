@@ -39,6 +39,14 @@
     uid: '1100'
     group: '1100'
 
+- name: Chown /mnt/mail
+  file:
+    path: /mnt/mail
+    owner: vmail
+    group: vmail
+    recurse: yes
+  tags: mnt-mail
+
 - name: copy nginx.conf
   copy:
     src: nginx.conf
@@ -127,6 +135,7 @@
     - tls_policy_maps
     - recipient_bcc_maps
     - sender_bcc_maps
+  tags: postfix_general
 
 - name: Make dir for postfix-mysql
   file:
@@ -147,6 +156,7 @@
     - virtual_alias_maps.cf
     - virtual_mailbox_domains.cf
     - virtual_mailbox_maps.cf
+  tags: postfix_queues
 
 - name: Make indexed base from senders&recipients
   shell: /sbin/postmap /etc/postfix/recipient_bcc_maps /etc/postfix/sender_bcc_maps

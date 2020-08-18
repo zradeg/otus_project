@@ -115,13 +115,13 @@ smtpd_sasl_path = private/dovecot-auth
 
 # Директория для хранения почты
 virtual_mailbox_base = /mnt/mail
-virtual_minimum_uid = 1000
-virtual_uid_maps = static:1000
-virtual_gid_maps = static:1000
+virtual_minimum_uid = 1100
+virtual_uid_maps = static:1100
+virtual_gid_maps = static:1100
 virtual_transport = dovecot
 dovecot_destination_recipient_limit = 1
 
 sender_bcc_maps = hash:/etc/postfix/sender_bcc_maps
 recipient_bcc_maps = hash:/etc/postfix/recipient_bcc_maps
 
-compatibility_level=2
+#compatibility_level=2

@@ -81,7 +81,7 @@
     state: import
     target: /usr/share/nginx/html/webmail/SQL/mysql.initial.sql
   ignore_errors: yes
-  when: ansible_host == ngx01
+  when: (ansible_host == ngx01_ip)
   tags: nginx-bd
 
 - name: Start keepalived
