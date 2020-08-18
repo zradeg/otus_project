@@ -28,11 +28,24 @@
   tags: create_fs
   run_once: True
 
-#
-#- name: Mount drbd
-#  mount:
-#    path: "{{ postfix_drbd_mountpoint }}"
-#    src: /dev/drbd0
-#    fstype: xfs
-#    state: mounted
-#  tags: mount_drbd
+- name: Mount drbd
+  mount:
+    path: "{{ postfix_drbd_mountpoint }}"
+    src: /dev/drbd0
+    fstype: xfs
+    state: mounted
+  tags: mount_drbd
+
+- name: Chown /mnt/mail
+  file:
+    path: /mnt/mail
+    owner: vmail
+    group: vmail
+    recurse: yes
+  tags: mnt-mail
+
+- name: Mount drbd
+  mount:
+    path: "{{ postfix_drbd_mountpoint }}"
+    state: absent
+  tags: umount_drbd

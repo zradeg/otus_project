@@ -39,14 +39,6 @@
     uid: '1100'
     group: '1100'
 
-- name: Chown /mnt/mail
-  file:
-    path: /mnt/mail
-    owner: vmail
-    group: vmail
-    recurse: yes
-  tags: mnt-mail
-
 - name: copy nginx.conf
   copy:
     src: nginx.conf
@@ -187,6 +179,7 @@
     state: directory
     owner: vmail
     group: dovecot
+    recurse: yes
     mode: 0755
 
 - name: Stop dovecot
