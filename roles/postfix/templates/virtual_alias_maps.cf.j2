@@ -1,4 +1,5 @@
-hosts = "{{ postfix_db_host }}:6033"
+hosts = "{{ postfix_db_host }}"
+port = {{ postfix_db_port }}
 user = {{ postfix_db_user }}
 password = {{ postfix_db_pass }}
 dbname = {{ postfix_db_name }}
