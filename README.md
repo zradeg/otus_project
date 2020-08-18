@@ -229,12 +229,12 @@ quit
 
 
 ### Кроме материалов, предоставленных курсом OTUS, в процессе подготовки стенда также были использованы следующие материалы:
-![The DRBD9 User’s Guide](https://www.linbit.com/drbd-user-guide/drbd-guide-9_0-en/)
-![Pacemaker 1.1
+[The DRBD9 User’s Guide](https://www.linbit.com/drbd-user-guide/drbd-guide-9_0-en/)
+[Pacemaker 1.1
 Clusters from Scratch
 Step-by-Step Instructions for Building Your First High-Availability Cluster
 Edition 9](https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/1.1/html-single/Clusters_from_Scratch/index.html)
-![Percona XtraDB Cluster 5.7 Documentation](percona.com/doc/percona-xtradb-cluster/5.7/index.html)
-![Roundcube Wiki](https://github.com/roundcube/roundcubemail/wiki)
-![Postfix Admin - Web Interface for Manage Users](https://postfix-configuration.readthedocs.io/en/latest/postfixadmin/)
-![Настройка postfix + dovecot + mysql база + postfixadmin + roundcube + dkim на CentOS 8](https://serveradmin.ru/nastroyka-postfix-dovecot-centos-8/)
+[Percona XtraDB Cluster 5.7 Documentation](percona.com/doc/percona-xtradb-cluster/5.7/index.html)
+[Roundcube Wiki](https://github.com/roundcube/roundcubemail/wiki)
+[Postfix Admin - Web Interface for Manage Users](https://postfix-configuration.readthedocs.io/en/latest/postfixadmin/)
+[Настройка postfix + dovecot + mysql база + postfixadmin + roundcube + dkim на CentOS 8](https://serveradmin.ru/nastroyka-postfix-dovecot-centos-8/)
