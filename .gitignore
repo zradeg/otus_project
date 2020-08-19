@@ -1,6 +1,6 @@
 project.iml
 .idea/
-terraform/.terraform/
+terraform/* vagrant destroy -f postfix01;/
 terraform/.idea/
 .vagrant
 VirtualBox VMs

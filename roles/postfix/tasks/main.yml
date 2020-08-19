@@ -189,6 +189,15 @@
     enabled: yes
   no_log: true
 
+- name: Chown /var/log/dovecot
+  file:
+    path: /var/log/dovecot
+    owner: vmail
+    group: dovecot
+    state: directory
+    recurse: yes
+  tags: dovecot-log_chown
+
 - name: Stop postfix
   systemd:
     name: postfix
