@@ -1,65 +1,65 @@
 ---
-- hosts: all
-  become: yes
-  roles:
-    - base_options
-
-###----------Percona XtraDB Cluster Setup---------
-- name: Percona Install
-  hosts:
-    - pxc1
-    - pxc2
-    - pxc3
-  become: yes
-  roles:
-    - pxc_install_percona
-
-- name: Сonfig access PerconaDB
-  hosts:
-    - pxc1
-    - pxc2
-    - pxc3
-  become: yes
-  roles:
-    - pxc_config_access
-
-- name: Config node1
-  hosts:
-    - pxc1
-  become: yes
-  roles:
-    - pxc_config_node1
-
-- name: Config node2-3
-  hosts:
-    - pxc2
-    - pxc3
-  become: yes
-  roles:
-    - pxc_config_node2-3
-
-- name: Boostrap cluster
-  hosts:
-    - pxc1
-  become: yes
-  roles:
-    - pxc_bootstrap
-
-- name: Add joiners to cluster
-  hosts:
-    - pxc2
-    - pxc3
-  become: yes
-  roles:
-    - pxc_add_joiners
-
-- name: Complete master init
-  hosts:
-    - pxc1
-  become: yes
-  roles:
-    - pxc_master_completion
-###-------End of Percona XtraDB Cluster Setup------
+#- hosts: all
+#  become: yes
+#  roles:
+#    - base_options
+#
+####----------Percona XtraDB Cluster Setup---------
+#- name: Percona Install
+#  hosts:
+#    - pxc1
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_install_percona
+#
+#- name: Сonfig access PerconaDB
+#  hosts:
+#    - pxc1
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_config_access
+#
+#- name: Config node1
+#  hosts:
+#    - pxc1
+#  become: yes
+#  roles:
+#    - pxc_config_node1
+#
+#- name: Config node2-3
+#  hosts:
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_config_node2-3
+#
+#- name: Boostrap cluster
+#  hosts:
+#    - pxc1
+#  become: yes
+#  roles:
+#    - pxc_bootstrap
+#
+#- name: Add joiners to cluster
+#  hosts:
+#    - pxc2
+#    - pxc3
+#  become: yes
+#  roles:
+#    - pxc_add_joiners
+#
+#- name: Complete master init
+#  hosts:
+#    - pxc1
+#  become: yes
+#  roles:
+#    - pxc_master_completion
+####-------End of Percona XtraDB Cluster Setup------
 
 ###------------ProxySQL setup-----------
 - hosts:

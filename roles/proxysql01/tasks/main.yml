@@ -30,7 +30,7 @@
       - proxysql2
     state: latest
   tags: proxysql
-  no_log: true
+#  no_log: true
 
 - name: Copy config proxysql.cnf
   copy:
